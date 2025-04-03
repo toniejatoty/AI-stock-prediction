@@ -13,6 +13,7 @@ def get_stock_data(symbol):
             df_stock_full_info_with_nan
         )
     df_stock_full_info = drop_columns_with_only_zeros_and_nan(df_stock_full_info)
+    df_stock_full_info = drop_very_historic_data(df_stock_full_info,0)
     return df_stock_full_info
 
 
@@ -85,4 +86,11 @@ def drop_columns_with_only_zeros_and_nan(df_stockdata):
     df_stockdata = df_stockdata.fillna(0)
     columns_to_drop = df_stockdata.columns[(df_stockdata == 0).all()]
     df_stockdata = df_stockdata.drop(columns=columns_to_drop)
+    return df_stockdata
+
+def drop_very_historic_data(df_stockdata, percentage_how_much_delete):
+    how_much_days_delete = percentage_how_much_delete * df_stockdata.shape[0] /100
+    how_much_days_delete = int(how_much_days_delete)
+    df_stockdata = df_stockdata.iloc[how_much_days_delete:]
+    df_stockdata = df_stockdata.iloc[:-200]
     return df_stockdata
