@@ -7,31 +7,44 @@ def show_plot(
     df, result_of_testing, days_to_train, predictions, days_in_future_to_predict
 ):
     df = df.tail(days_to_train)
-    plt.figure(figsize=(10, 5))
 
-    plt.plot(df.index, df["Close"], label="Real price")
+    fig, ax = plt.subplots(figsize=(12, 6))
+    # Poprawione: używamy ax.plot() zamiast ax.plt.plot()
+    ax.plot(df.index, df["Close"], label="Real price")
     dates_to_visualize_test = df.index[-days_in_future_to_predict:]
 
-    plt.plot(
+    ax.plot(
         dates_to_visualize_test,
         result_of_testing,
         label="result_of_testing",
         marker="o",
     )
-    last_date = last_date = df.index[-1]
+
+    last_date = df.index[-1]
     future_dates = pd.date_range(
         last_date + pd.Timedelta(days=1), periods=days_in_future_to_predict, freq="B"
     )
-    plt.plot(future_dates, predictions, label="Prediction", marker="o")
-    plt.xlabel("Date")
-    plt.ylabel("Stock price")
-    plt.title("Stock price predition")
-    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
-    plt.legend(
+    ax.plot(future_dates, predictions, label="Prediction", marker="o")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Stock price")
+    ax.set_title("Stock price prediction")
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.legend(
         title=f"Number of days to train: {days_to_train}\nNumber of days to predict: {days_in_future_to_predict}"
     )
-    plt.show()
+    plt.tight_layout()
+    return fig
+
+
 def show_all_historical_data(df):
-    plt.figure(figsize=(10, 5))
-    plt.plot(df['Close'])
-    plt.show()
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(df.index, df["Close"], label="Cena zamknięcia", linewidth=2)
+    ax.set_title(
+        f"Historyczne ceny akcji ({df.index[0].date()} - {df.index[-1].date()})", pad=20
+    )
+    ax.set_xlabel("Data")
+    ax.set_ylabel("Cena ($)")
+    ax.grid(True, linestyle="--", alpha=0.7)
+    ax.legend()
+    plt.tight_layout()
+    return fig
