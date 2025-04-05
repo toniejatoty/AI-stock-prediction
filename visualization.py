@@ -4,12 +4,10 @@ import matplotlib.pyplot as plt
 
 
 def show_plot(
-    df, result_of_testing, days_to_train, predictions, days_in_future_to_predict
-):
+    df, result_of_testing, days_to_train, predictions, days_in_future_to_predict):
     df = df.tail(days_to_train)
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    # Poprawione: używamy ax.plot() zamiast ax.plt.plot()
     ax.plot(df.index, df["Close"], label="Real price")
     dates_to_visualize_test = df.index[-days_in_future_to_predict:]
 

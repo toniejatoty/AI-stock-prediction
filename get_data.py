@@ -1,8 +1,9 @@
 import yfinance as yf
 import pandas as pd
 
-def get_stock_data(symbol):
-    history_prices = get_history_prices(symbol)
+def get_stock_data(symbol,start_date):
+    start_date=validade_params(symbol,start_date)
+    history_prices = get_history_prices(symbol,start_date)
     income_statement = get_income_statement(symbol)
 
     if income_statement.empty:
@@ -16,10 +17,38 @@ def get_stock_data(symbol):
     df_stock_full_info = drop_very_historic_data(df_stock_full_info,0)
     return df_stock_full_info
 
+def validade_params(symbol, start_date):
+    try:
+        company = yf.Ticker(symbol)
+        hist = company.history(period="max")
+        
+        if hist.empty:
+            raise ValueError(f"Brak danych dla symbolu {symbol}")
+        
+        available_start = pd.to_datetime(hist.index[0]).tz_localize(None)
+        
+        input_date = pd.to_datetime(start_date)
+        if pd.isna(input_date):  
+            return available_start
+            
+        if input_date < pd.Timestamp.min:
+            return available_start
+            
+        input_date = input_date.tz_localize(None)
 
-def get_history_prices(symbol):
+        
+        return max(input_date, available_start)
+        
+    except Exception as e:
+        raise ValueError(f"Błąd walidacji parametrów: {str(e)}")
+        
+    except Exception as e:
+        raise ValueError(f"Błąd walidacji parametrów: {str(e)}")
+    
+
+def get_history_prices(symbol,start_date):
     company = yf.Ticker(symbol)
-    history_prices = company.history(period="max")
+    history_prices = company.history(start=start_date)
     return history_prices
 
 
@@ -92,5 +121,4 @@ def drop_very_historic_data(df_stockdata, percentage_how_much_delete):
     how_much_days_delete = percentage_how_much_delete * df_stockdata.shape[0] /100
     how_much_days_delete = int(how_much_days_delete)
     df_stockdata = df_stockdata.iloc[how_much_days_delete:]
-    df_stockdata = df_stockdata.iloc[:-200]
     return df_stockdata

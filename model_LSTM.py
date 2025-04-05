@@ -4,11 +4,10 @@ from tensorflow.keras.models import Sequential # type: ignore
 from tensorflow.keras.layers import LSTM, Dense, Dropout # type: ignore
 
 
-def predict_stock_prices(df_org, days_in_future_to_predict):
+def predict_stock_prices(df_org, days_in_future_to_predict,days_to_train,epochs):
     #df_org=df_org[['Close']]
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(df_org)
-    days_to_train = 60
     X, y = create_sequences(scaled_data, days_to_train, df_org.columns.get_loc("Close"))
 
     X_train, X_test = X[:-days_in_future_to_predict
@@ -39,9 +38,8 @@ def predict_stock_prices(df_org, days_in_future_to_predict):
     model.compile(optimizer="adam", loss="mean_squared_error")
 
     model.summary()
-    epoch_nums = 10
-    for epoch in range(epoch_nums):
-        print(f"{epoch} / {epoch_nums}")
+    for epoch in range(epochs):
+        print(f"{epoch} / {epochs}")
         X_val = get_X_test(X_test, model, df_org, days_to_train, days_in_future_to_predict)
         model.fit(
             X_train, y_train,
