@@ -1,11 +1,21 @@
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 from tensorflow.keras.models import Sequential  # type: ignore
 from tensorflow.keras.layers import LSTM, Dense, Dropout  # type: ignore
-
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Adagrad # type: ignore
 
 def predict_stock_prices(
-    df_org, days_in_future_to_predict, days_to_train, epochs, stop_check,progress_callback
+    df_org,
+    days_in_future_to_predict,
+    days_to_train,
+    epochs,
+    loss_function,
+    optimizer_name,
+    learning_rate,
+    batch_size,
+    stop_check,
+    progress_callback,
 ):
     # df_org=df_org[['Close']]
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -18,31 +28,14 @@ def predict_stock_prices(
     X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df_org.shape[1]))
     X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df_org.shape[1]))
 
-    model = Sequential()
+    model = get_model(X_train.shape[1], df_org.shape[1],optimizer_name, learning_rate,loss_function)
 
-    model.add(
-        LSTM(
-            units=50,
-            return_sequences=True,
-            input_shape=(X_train.shape[1], df_org.shape[1]),
-        )
-    )
-    model.add(Dropout(0.2))
-
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dropout(0.2))
-
-    model.add(Dense(units=1))
-
-    model.compile(optimizer="adam", loss="mean_squared_error")
-
-    model.summary()
     for epoch in range(epochs):
         progress_callback(epoch, epochs)
         if stop_check():
             print(f"Training stopped at epoch {epoch}")
             break
-        
+
         print(f"{epoch} / {epochs}")
         X_val = get_X_test(
             X_test, model, df_org, days_to_train, days_in_future_to_predict
@@ -51,11 +44,11 @@ def predict_stock_prices(
             X_train,
             y_train,
             epochs=1,
-            batch_size=32,
+            batch_size=batch_size,
             validation_data=(X_val, y_test),
         )
-    predictions = model.predict(X_test)
-    predictions = inverse_scaller(predictions, df_org, scaler)
+    #predictions = model.predict(X_test)
+    #predictions = inverse_scaller(predictions, df_org, scaler)
 
     test_predictions = get_predicted_new_prices(
         df_org,
@@ -71,9 +64,11 @@ def predict_stock_prices(
     future_predictions = get_predicted_new_prices(
         df_org, days_in_future_to_predict, model, days_to_train, scaler, X_test, y_test
     )
+    score = get_score(test_predictions,y_test,loss_function,scaler,df_org)
 
-    return (test_predictions, future_predictions)  # predictions
+    return (test_predictions, future_predictions,score)  # /predictions to return
 
+############################# functions
 
 def create_sequences(df, days_to_train, close_index):
     X = []
@@ -84,14 +79,35 @@ def create_sequences(df, days_to_train, close_index):
     return np.array(X), np.array(y)
 
 
+
+def get_model(input_shape1, input_shape2,optimizer_name, learning_rate,loss_function):
+    model = Sequential()
+
+    model.add(
+        LSTM(
+            units=50,
+            return_sequences=True,
+            input_shape=(input_shape1, input_shape2),
+        )
+    )
+    model.add(Dropout(0.2))
+    model.add(LSTM(units=50, return_sequences=False))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=1))
+    opt = get_optimizer(optimizer_name, learning_rate)
+    model.compile(optimizer=opt, loss=loss_function)
+    model.summary()
+    return model
+
+
 def inverse_scaller(predictions, df_org, scaler):
     temp_array = np.zeros((predictions.shape[0], df_org.shape[1]))
     temp_array[:, df_org.columns.get_loc("Close")] = predictions.flatten()
-
     predictions_original = scaler.inverse_transform(temp_array)
-
     predictions_close = predictions_original[:, df_org.columns.get_loc("Close")]
     return predictions_close
+
+
 
 
 def get_X_test(X_test, model, df_org, days_to_train, days_in_future_to_predict):
@@ -105,8 +121,8 @@ def get_X_test(X_test, model, df_org, days_to_train, days_in_future_to_predict):
         last_sequence2 = np.roll(last_sequence2, -1, axis=0)
         last_sequence2[-1, df_org.columns.get_loc("Close")] = pred2[0, 0]
         result.append(last_sequence2)
-
     return np.array(result)
+
 
 
 def get_predicted_new_prices(
@@ -134,3 +150,22 @@ def get_predicted_new_prices(
     future_predictions = np.array(future_predictions).reshape(-1, 1)
     future_predictions = inverse_scaller(future_predictions, df_org, scaler)
     return future_predictions
+
+
+
+def get_optimizer(name, learning_rate):
+    if name == "adam":
+        return Adam(learning_rate=learning_rate)
+    elif name == "rmsprop":
+        return RMSprop(learning_rate=learning_rate)
+    elif name == "sgd":
+        return SGD(learning_rate=learning_rate)
+    
+def get_score(predicted, real, loss_function,scaler,df_org):
+    real = inverse_scaller(real, df_org, scaler)
+    if loss_function == "mse":
+        score = mean_squared_error(predicted, real)
+    elif loss_function == "mae":
+        score = mean_absolute_error(predicted, real)
+    return score
+        

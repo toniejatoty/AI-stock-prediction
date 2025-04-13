@@ -1,10 +1,10 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 import sys
 
 
-def predict_stock_prices(df_org, days_in_future_to_predict):
+def predict_stock_prices(df_org, days_in_future_to_predict,loss_function):
     int_max_value = int(sys.maxsize)
     max_size_df = df_org.shape[0]
     days_in_past_to_train = {}
@@ -46,11 +46,14 @@ def predict_stock_prices(df_org, days_in_future_to_predict):
                 days_in_future_to_predict,
             )
 
-            mse = mean_squared_error(predictions, y_test)
-            days_in_past_to_train[days_to_train] = mse
+            if loss_function == "mse":
+                score = mean_squared_error(y_test, predictions)
+            elif loss_function == "mae":
+                score = mean_absolute_error(y_test, predictions)
+            days_in_past_to_train[days_to_train] = score
 
     days_to_train = min(days_in_past_to_train, key=lambda k: days_in_past_to_train[k])
-
+    score_of_training = days_in_past_to_train[days_to_train]
     # to visualize result of training
     result_of_testing_to_visualize, _ = get_prediction(
         df_org,
@@ -64,7 +67,7 @@ def predict_stock_prices(df_org, days_in_future_to_predict):
     result_of_predictions, _ = get_prediction(
         df_org, days_to_train, 0, model, days_in_future_to_predict
     )
-    return result_of_testing_to_visualize, result_of_predictions, days_to_train
+    return result_of_testing_to_visualize, result_of_predictions, days_to_train,score_of_training
 
 
 def get_prediction(
