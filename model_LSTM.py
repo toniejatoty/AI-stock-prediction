@@ -5,7 +5,7 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout  # type: ignore
 
 
 def predict_stock_prices(
-    df_org, days_in_future_to_predict, days_to_train, epochs, stop_check
+    df_org, days_in_future_to_predict, days_to_train, epochs, stop_check,progress_callback
 ):
     # df_org=df_org[['Close']]
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -38,9 +38,11 @@ def predict_stock_prices(
 
     model.summary()
     for epoch in range(epochs):
+        progress_callback(epoch, epochs)
         if stop_check():
             print(f"Training stopped at epoch {epoch}")
             break
+        
         print(f"{epoch} / {epochs}")
         X_val = get_X_test(
             X_test, model, df_org, days_to_train, days_in_future_to_predict

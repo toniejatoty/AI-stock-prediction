@@ -6,7 +6,7 @@ from visualization import get_plot, show_all_historical_data
 
 
 def get_predictions(
-    days_in_future_to_predict, symbol, days_to_train, epochs, start_date,stop_check
+    days_in_future_to_predict, symbol, days_to_train, epochs, start_date,stop_check,progress_callback
 ):
     try:
         df_stockdata = get_data.get_stock_data(symbol, start_date)
@@ -27,7 +27,8 @@ def get_predictions(
             days_in_future_to_predict,
             days_to_train,
             epochs,
-            stop_check
+            stop_check,
+            progress_callback
         )
     )
 

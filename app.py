@@ -4,9 +4,12 @@ from main import get_predictions
 
 should_stop = False
 
-def train_model(ticker, days_to_predict, days_to_train, epochs, start_date):
+def run_model(ticker, days_to_predict, days_to_train, epochs, start_date,progress=gr.Progress()):
     global should_stop
     should_stop = False
+
+    def update_progress(epoch, total_epochs):
+        progress((epoch / total_epochs), desc=f"Epoch {epoch}/{total_epochs}")
     try:
         fig_all, fig_linear, fig_lstm = get_predictions(
             days_to_predict,
@@ -14,7 +17,8 @@ def train_model(ticker, days_to_predict, days_to_train, epochs, start_date):
             days_to_train,
             epochs,
             pd.to_datetime(start_date),
-            stop_check=lambda: should_stop
+            lambda: should_stop,
+            update_progress
         )
         return ("Training finished successfully!", fig_all, fig_linear, fig_lstm)
     except Exception as e:
@@ -47,7 +51,7 @@ with demo:
     fig_lstm_output = gr.Plot(label="LSTM Prediction")
 
     start_button.click(
-        fn=train_model,
+        fn=run_model,
         inputs=[ticker, days_to_predict, days_to_train, epochs, start_date],
         outputs=[status_output, fig_all_output, fig_linear_output, fig_lstm_output]
     )
@@ -58,4 +62,7 @@ with demo:
         outputs=[status_output]
     )
 
+
+
+    
 demo.launch()
