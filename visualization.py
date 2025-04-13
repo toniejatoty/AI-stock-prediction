@@ -3,9 +3,10 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 
-def show_plot(
-    df, result_of_testing, days_to_train, predictions, days_in_future_to_predict):
-    df = df.tail(days_to_train)
+def get_plot(
+    df, result_of_testing, days_to_train, predictions, days_in_future_to_predict
+):
+    df = df.tail(days_in_future_to_predict * 2)
 
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(df.index, df["Close"], label="Real price")
@@ -36,13 +37,11 @@ def show_plot(
 
 def show_all_historical_data(df):
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(df.index, df["Close"], label="Cena zamknięcia", linewidth=2)
-    ax.set_title(
-        f"Historyczne ceny akcji ({df.index[0].date()} - {df.index[-1].date()})", pad=20
-    )
-    ax.set_xlabel("Data")
-    ax.set_ylabel("Cena ($)")
-    ax.grid(True, linestyle="--", alpha=0.7)
+    ax.plot(df.index, df["Close"], label="Real Price")
+    ax.set_title(f"Historic stock price ({df.index[0].date()} - {df.index[-1].date()})")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Stock price")
+
     ax.legend()
     plt.tight_layout()
     return fig

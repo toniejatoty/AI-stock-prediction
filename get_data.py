@@ -1,9 +1,10 @@
 import yfinance as yf
 import pandas as pd
 
-def get_stock_data(symbol,start_date):
-    start_date=validade_params(symbol,start_date)
-    history_prices = get_history_prices(symbol,start_date)
+
+def get_stock_data(symbol, start_date):
+    start_date = validade_params(symbol, start_date)
+    history_prices = get_history_prices(symbol, start_date)
     income_statement = get_income_statement(symbol)
 
     if income_statement.empty:
@@ -14,39 +15,37 @@ def get_stock_data(symbol,start_date):
             df_stock_full_info_with_nan
         )
     df_stock_full_info = drop_columns_with_only_zeros_and_nan(df_stock_full_info)
-    df_stock_full_info = drop_very_historic_data(df_stock_full_info,0)
+    df_stock_full_info = drop_very_historic_data(df_stock_full_info, 0)
     return df_stock_full_info
+
 
 def validade_params(symbol, start_date):
     try:
         company = yf.Ticker(symbol)
         hist = company.history(period="max")
-        
+
         if hist.empty:
-            raise ValueError(f"Brak danych dla symbolu {symbol}")
-        
+            raise ValueError(f"Can't find data for that ticker: {symbol}")
+
         available_start = pd.to_datetime(hist.index[0]).tz_localize(None)
-        
+
         input_date = pd.to_datetime(start_date)
-        if pd.isna(input_date):  
+        if pd.isna(input_date):
             return available_start
-            
+
         if input_date < pd.Timestamp.min:
             return available_start
-            
+
         input_date = input_date.tz_localize(None)
 
-        
         return max(input_date, available_start)
-        
-    except Exception as e:
-        raise ValueError(f"Błąd walidacji parametrów: {str(e)}")
-        
-    except Exception as e:
-        raise ValueError(f"Błąd walidacji parametrów: {str(e)}")
-    
 
-def get_history_prices(symbol,start_date):
+    except Exception as e:
+        raise ValueError(f"{str(e)}")
+
+
+
+def get_history_prices(symbol, start_date):
     company = yf.Ticker(symbol)
     history_prices = company.history(start=start_date)
     return history_prices
@@ -66,7 +65,7 @@ def merge(df_stockdata, income_statement):
     date_index = df_stockdata.index
     df_stockdata = df_stockdata.merge(income_statement, on="Quarter", how="left")
     df_stockdata.index = date_index
-    df_stockdata.drop(columns='Quarter',inplace=True )
+    df_stockdata.drop(columns="Quarter", inplace=True)
     df_stockdata = df_stockdata.astype(float)
     return df_stockdata
 
@@ -99,13 +98,12 @@ def delete_useless_col_in_dataframe(df_stockdata):
         "Reconciled Depreciation",
         "Total Other Finance Cost",
         "Operating Expense",
-
     ]
-    df_stockdata = df_stockdata.drop(columns=useless_col, errors='ignore')
-    
-    close_corr = df_stockdata.corr()['Close']
-    filtered_corr = close_corr[(close_corr >=-0.5) & (close_corr <=0.5)]
-    df_stockdata = df_stockdata.drop(columns = filtered_corr.index)
+    df_stockdata = df_stockdata.drop(columns=useless_col, errors="ignore")
+
+    close_corr = df_stockdata.corr()["Close"]
+    filtered_corr = close_corr[(close_corr >= -0.5) & (close_corr <= 0.5)]
+    df_stockdata = df_stockdata.drop(columns=filtered_corr.index)
     return df_stockdata
 
 
@@ -117,8 +115,9 @@ def drop_columns_with_only_zeros_and_nan(df_stockdata):
     df_stockdata = df_stockdata.drop(columns=columns_to_drop)
     return df_stockdata
 
+
 def drop_very_historic_data(df_stockdata, percentage_how_much_delete):
-    how_much_days_delete = percentage_how_much_delete * df_stockdata.shape[0] /100
+    how_much_days_delete = percentage_how_much_delete * df_stockdata.shape[0] / 100
     how_much_days_delete = int(how_much_days_delete)
     df_stockdata = df_stockdata.iloc[how_much_days_delete:]
     return df_stockdata
