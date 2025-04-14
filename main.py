@@ -18,6 +18,7 @@ def get_predictions(
     batch_size,
     stop_check,
     progress_callback,
+    lstm_layers
 ):
     try:
         df_stockdata = get_data.get_stock_data(symbol, start_date)
@@ -46,6 +47,7 @@ def get_predictions(
             batch_size,
             stop_check,
             progress_callback,
+            lstm_layers
         )
     )
 

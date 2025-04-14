@@ -16,6 +16,7 @@ def predict_stock_prices(
     batch_size,
     stop_check,
     progress_callback,
+    lstm_layers
 ):
     # df_org=df_org[['Close']]
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -28,7 +29,7 @@ def predict_stock_prices(
     X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df_org.shape[1]))
     X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df_org.shape[1]))
 
-    model = get_model(X_train.shape[1], df_org.shape[1],optimizer_name, learning_rate,loss_function)
+    model = get_model(X_train.shape[1], df_org.shape[1],optimizer_name, learning_rate,loss_function,lstm_layers)
 
     for epoch in range(epochs):
         progress_callback(epoch, epochs)
@@ -80,23 +81,47 @@ def create_sequences(df, days_to_train, close_index):
 
 
 
-def get_model(input_shape1, input_shape2,optimizer_name, learning_rate,loss_function):
+def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function, lstm_layers=None):
     model = Sequential()
-
-    model.add(
-        LSTM(
-            units=50,
-            return_sequences=True,
-            input_shape=(input_shape1, input_shape2),
-        )
-    )
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dropout(0.2))
+    
+    if not lstm_layers:
+        lstm_layers = [
+            {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 
+             'activation': 'tanh', 'recurrent_activation': 'sigmoid', 'return_sequences': True},
+            {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0,
+             'activation': 'tanh', 'recurrent_activation': 'sigmoid', 'return_sequences': False}
+        ]
+    
+    for i, layer_config in enumerate(lstm_layers):
+        if i == 0:
+            model.add(LSTM(
+                units=layer_config['units'],
+                return_sequences=layer_config['return_sequences'],
+                activation=layer_config['activation'],
+                recurrent_activation=layer_config['recurrent_activation'],
+                dropout=layer_config['dropout'],
+                recurrent_dropout=layer_config['recurrent_dropout'],
+                input_shape=(input_shape1, input_shape2)
+            ))
+        else:
+            model.add(LSTM(
+                units=layer_config['units'],
+                return_sequences=layer_config['return_sequences'],
+                activation=layer_config['activation'],
+                recurrent_activation=layer_config['recurrent_activation'],
+                dropout=layer_config['dropout'],
+                recurrent_dropout=layer_config['recurrent_dropout']
+            ))
+        
+        if i < len(lstm_layers) - 1:
+            model.add(Dropout(layer_config['dropout']))
+    
     model.add(Dense(units=1))
+    
     opt = get_optimizer(optimizer_name, learning_rate)
     model.compile(optimizer=opt, loss=loss_function)
     model.summary()
+    
     return model
 
 

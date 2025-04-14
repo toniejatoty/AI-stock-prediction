@@ -27,7 +27,7 @@ def get_plot(
     future_dates = pd.date_range(
         last_date + pd.Timedelta(days=1), periods=days_in_future_to_predict, freq="B"
     )
-    ax.plot(future_dates, predictions, label="Prediction")
+    ax.plot(future_dates, predictions, label="Prediction", marker="o")
     ax.set_xlabel("Date")
     ax.set_ylabel("Stock price")
     ax.set_title("Stock price prediction")
