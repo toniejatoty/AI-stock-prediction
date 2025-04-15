@@ -18,7 +18,7 @@ def predict_stock_prices(
     progress_callback,
     lstm_layers
 ):
-    # df_org=df_org[['Close']]
+    df_org=df_org[['Close']]
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(df_org)
     X, y = create_sequences(scaled_data, days_to_train, df_org.columns.get_loc("Close"))
@@ -48,8 +48,8 @@ def predict_stock_prices(
             batch_size=batch_size,
             validation_data=(X_val, y_test),
         )
-    #predictions = model.predict(X_test)
-    #predictions = inverse_scaller(predictions, df_org, scaler)
+    predictions = model.predict(X_test)
+    predictions = inverse_scaller(predictions, df_org, scaler)
 
     test_predictions = get_predicted_new_prices(
         df_org,
@@ -67,7 +67,7 @@ def predict_stock_prices(
     )
     score = get_score(test_predictions,y_test,loss_function,scaler,df_org)
 
-    return (test_predictions, future_predictions,score)  # /predictions to return
+    return (test_predictions, future_predictions,score,predictions)  # /predictions to return
 
 ############################# functions
 
@@ -84,15 +84,9 @@ def create_sequences(df, days_to_train, close_index):
 def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function, lstm_layers=None):
     model = Sequential()
     
-    if not lstm_layers:
-        lstm_layers = [
-            {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 
-             'activation': 'tanh', 'recurrent_activation': 'sigmoid', 'return_sequences': True},
-            {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0,
-             'activation': 'tanh', 'recurrent_activation': 'sigmoid', 'return_sequences': False}
-        ]
-    
     for i, layer_config in enumerate(lstm_layers):
+        if i == len(lstm_layers) - 1:
+            layer_config['return_sequences'] = False
         if i == 0:
             model.add(LSTM(
                 units=layer_config['units'],

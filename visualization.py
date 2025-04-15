@@ -10,6 +10,7 @@ def get_plot(
     predictions,
     days_in_future_to_predict,
     score_of_training,
+    result_of_testing_on_XTest=None
 ):
     df = df.tail(days_in_future_to_predict * 2)
 
@@ -22,6 +23,14 @@ def get_plot(
         result_of_testing,
         label="result_of_testing",
     )
+    if result_of_testing_on_XTest is not None:
+        dates_to_visualize_test = df.index[-days_in_future_to_predict:]
+
+        ax.plot(
+        dates_to_visualize_test,
+        result_of_testing_on_XTest,
+        label="result_of_testing_on_xtest",
+        )
 
     last_date = df.index[-1]
     future_dates = pd.date_range(
