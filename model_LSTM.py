@@ -67,7 +67,7 @@ def predict_stock_prices(
     )
     score = get_score(test_predictions,y_test,loss_function,scaler,df_org)
 
-    return (test_predictions, future_predictions,score,predictions)  # /predictions to return
+    return (test_predictions, future_predictions,score,predictions)
 
 ############################# functions
 
@@ -93,7 +93,7 @@ def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_fu
                 return_sequences=layer_config['return_sequences'],
                 activation=layer_config['activation'],
                 recurrent_activation=layer_config['recurrent_activation'],
-                dropout=layer_config['dropout'],
+    #            dropout=layer_config['dropout'],
                 recurrent_dropout=layer_config['recurrent_dropout'],
                 input_shape=(input_shape1, input_shape2)
             ))
@@ -103,7 +103,7 @@ def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_fu
                 return_sequences=layer_config['return_sequences'],
                 activation=layer_config['activation'],
                 recurrent_activation=layer_config['recurrent_activation'],
-                dropout=layer_config['dropout'],
+           #     dropout=layer_config['dropout'],
                 recurrent_dropout=layer_config['recurrent_dropout']
             ))
         

@@ -16,13 +16,11 @@ def predict_stock_prices(
 
     df = df.copy().reset_index(drop=True)
 
-    # Tworzenie targetów
     for i in range(1, days_in_future + 1):
         df[f'target_{i}'] = df['Close'].shift(-i)
 
     df.dropna(inplace=True)
     
-    # Tworzenie sekwencji danych wejściowych
     X = []
     y = {f'target_{i}': [] for i in range(1, days_in_future + 1)}
     
@@ -35,7 +33,6 @@ def predict_stock_prices(
     X = np.array(X)
     y = {k: np.array(v) for k, v in y.items()}
 
-    # Podział na dane uczące i testowe (ostatni punkt to test)
     X_train, X_test = X[:-1], X[-1].reshape(1, -1)
     y_train = {k: v[:-1] for k, v in y.items()}
     y_test = {k: v[-1] for k, v in y.items()}

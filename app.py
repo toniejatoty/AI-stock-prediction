@@ -74,6 +74,7 @@ with demo:
             ticker = gr.Textbox(label="Ticker", value="NVDA")
             days_to_predict = gr.Slider(1, 365, value=5, label="Days to predict")
             start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="1900-01-01")
+            days_to_train = gr.Slider(1, 1000, value=365, label="Days to train")
 
     with gr.Row():
         with gr.Group(visible=True) as layers_group:
@@ -85,24 +86,24 @@ with demo:
     with gr.Row():
         with gr.Group(visible=True) as layers_group:
             gr.Markdown("#LSTM")
-            days_to_train = gr.Slider(1, 1000, value=365, label="Days to train")
+            
             epochs = gr.Slider(1, 500, value=50, label="Epochs")
             loss_function = gr.Dropdown(choices=["mse", "mae"], label="Loss function", value="mse")
             optimizer_name = gr.Dropdown(choices=["adam", "sgd", "rmsprop"], label="Optimizer", value="adam")
             learning_rate_lstm = gr.Slider(0.0001, 0.1, value=0.001, step=0.0001, label="Learning rate")
             batch_size = gr.Slider(8, 512, step=8, value=32, label="Batch Size")
-        
+    num_of_layers_def=2    
     with gr.Row():
-        num_layers = gr.Slider(1, MAX_LAYERS, value=1, step=1, label="Number of LSTM Layers")
+        num_layers = gr.Slider(1, MAX_LAYERS, value=num_of_layers_def, step=1, label="Number of LSTM Layers")
         update_layers_btn = gr.Button("Update Layers Configuration")
     
-    # Kontener dla warstw LSTM
     lstm_layers_ui = []
     separators = []
+   
     with gr.Group(visible=True) as layers_group:
         gr.Markdown("### LSTM Layers Configuration")
         for i in range(MAX_LAYERS):
-            with gr.Row(visible=(i < 1)) as layer_row:
+            with gr.Row(visible=(i < num_of_layers_def)) as layer_row:
                 with gr.Column():
                     with gr.Row():
                         with gr.Column():
