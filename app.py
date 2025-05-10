@@ -1,5 +1,5 @@
 import gradio as gr
-import pandas as pd
+import numpy as np
 from main import get_predictions
 
 should_stop = False
@@ -9,7 +9,7 @@ RECURRENT_ACTIVATIONS = ['sigmoid', 'hard_sigmoid', 'tanh']
 
 def run_model(ticker, days_to_predict, start_date, days_to_train,
               n_estimators, learning_rate_gradian, max_depth,
-              epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size, num_layers, *LSTM_layers_info):
+              epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,early_stopping, num_layers, *LSTM_layers_info):
     global should_stop
     should_stop = False
     progress = gr.Progress()
@@ -34,11 +34,11 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
         })
 
 
-    def update_progress(epoch, total_epochs):
-        progress((epoch / total_epochs), desc=f"Epoch {epoch}/{total_epochs}")
+    def update_progress(epoch, total_epochs, loss, val_loss):
+        progress((epoch / total_epochs), desc=f"Epoch {epoch}/{total_epochs}, loss = {np.round(loss,5)}, val_loss = {np.round(val_loss,5)}")
 
     try:
-        fig_all, fig_linear, fig_gradian, fig_lstm = get_predictions(
+        fig_all, fig_linear, fig_gradian, fig_lstm, status = get_predictions(
             days_to_predict,
             ticker,
             start_date,
@@ -49,11 +49,12 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
             optimizer_name,
             learning_rate_lstm,
             batch_size,
+            early_stopping,
             lambda: should_stop,
             update_progress,
             lstm_layers
         )
-        return ("Training finished successfully!", fig_all, fig_linear,fig_gradian, fig_lstm)
+        return (status, fig_all, fig_linear,fig_gradian, fig_lstm)
     except Exception as e:
         return (f"Error: {str(e)}", None, None, None, None)
 
@@ -70,7 +71,7 @@ with demo:
     gr.Markdown("## General Information")
     with gr.Row():
         ticker = gr.Textbox(label="Ticker", value="NVDA")
-        days_to_predict = gr.Slider(1, 365, value=5, label="Days to predict")
+        days_to_predict = gr.Slider(1, 365, value=30, label="Days to predict")
         start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="1900-01-01")
         days_to_train = gr.Slider(1, 1000, value=365, label="Days to train")
         loss_function = gr.Dropdown(choices=["mse", "mae"], label="Loss function", value="mse")
@@ -83,11 +84,11 @@ with demo:
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## LSTM")
     with gr.Row():
-        epochs = gr.Slider(1, 500, value=50, label="Epochs")
+        epochs = gr.Slider(1, 500, value=100, label="Epochs")
         optimizer_name = gr.Dropdown(choices=["adam", "sgd", "rmsprop"], label="Optimizer", value="adam")
         learning_rate_lstm = gr.Slider(0.0001, 0.1, value=0.001, step=0.0001, label="Learning rate")
         batch_size = gr.Slider(8, 512, step=8, value=32, label="Batch Size")
-
+        early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
     num_of_layers_def=2    
     with gr.Row():
         num_layers = gr.Slider(1, MAX_LAYERS, value=num_of_layers_def, step=1, label="Number of LSTM Layers")
@@ -139,7 +140,7 @@ with demo:
         fn=run_model,
         inputs=[ticker, days_to_predict, start_date, days_to_train,
         n_estimators, learning_rate_gradian, max_depth,
-        epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size, num_layers] +
+        epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,early_stopping, num_layers] +
        [comp for (_, *comps) in lstm_layers_ui for comp in comps],
         outputs=[status_output, fig_historical_output, fig_linear_output,fig_gradian_output, fig_lstm_output]
     )

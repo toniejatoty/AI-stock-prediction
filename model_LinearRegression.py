@@ -5,6 +5,7 @@ import sys
 
 
 def predict_stock_prices(df_org, days_in_future_to_predict, loss_function):
+    Status="OK"
     int_max_value = int(sys.maxsize)
     max_size_df = df_org.shape[0]
     days_in_past_to_train = {}
@@ -61,6 +62,7 @@ def predict_stock_prices(df_org, days_in_future_to_predict, loss_function):
         result_of_predictions,
         days_to_train,
         score_of_training,
+        Status
     )
 
 

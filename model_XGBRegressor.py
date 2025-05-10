@@ -9,6 +9,7 @@ def predict_stock_prices(
     model_params,
     loss_function
 ):
+    Status="OK"
     df = df_org.copy()
     required_cols = ["Open", "High", "Low", "Close", "Volume"]
     for i in range(1, days_in_future + 1):
@@ -50,7 +51,7 @@ def predict_stock_prices(
 
     score = get_score(test_preds, y_test_vals, loss_function)
 
-    return test_preds, future_preds, score
+    return test_preds, future_preds, score,Status
 
 
 

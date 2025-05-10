@@ -16,6 +16,7 @@ def get_predictions(
     optimizer_name,
     learning_rate,
     batch_size,
+    early_stopping,
     stop_check,
     progress_callback,
     lstm_layers
@@ -27,17 +28,13 @@ def get_predictions(
     
     days_to_train,days_in_future_to_predict = validate_params(days_to_train,df_stockdata,days_in_future_to_predict)
     
-    (
-        LINEAR_result_of_testing_to_visualize,
-        LINEAR_result_of_predictions,
-        LINEAR_best_days_to_train,
-        LINEAR_score_of_training
-    ) = model_LinearRegression.predict_stock_prices(
+    LINEAR_result_of_testing_to_visualize,LINEAR_result_of_predictions,LINEAR_best_days_to_train,LINEAR_score_of_training, LINEAR_status=(
+         model_LinearRegression.predict_stock_prices(
         df_stockdata, days_in_future_to_predict,loss_function
-    )
+    ))
 
 
-    GRADIAN_result_of_testing_to_visualize, GRADIAN_result_of_predictions, GRADIAN_score_of_training= (
+    XGBRegressor_result_of_testing_to_visualize, XGBRegressor_result_of_predictions, XGBRegressor_score_of_training,XGBRegressor_status= (
         model_XGBRegressor.predict_stock_prices(
             df_stockdata,
             days_in_future_to_predict,
@@ -50,7 +47,7 @@ def get_predictions(
         )
     )
   
-    LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training= (
+    LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training,LSTM_status= (
         model_LSTM.predict_stock_prices(
             df_stockdata,
             days_in_future_to_predict,
@@ -60,6 +57,7 @@ def get_predictions(
             optimizer_name,
             learning_rate,
             batch_size,
+            early_stopping,
             stop_check,
             progress_callback,
             lstm_layers
@@ -78,11 +76,11 @@ def get_predictions(
 
     fig_gradian = get_plot(
         df_stockdata,
-        GRADIAN_result_of_testing_to_visualize,
+        XGBRegressor_result_of_testing_to_visualize,
         days_to_train,
-        GRADIAN_result_of_predictions,
+        XGBRegressor_result_of_predictions,
         days_in_future_to_predict,
-        GRADIAN_score_of_training
+        XGBRegressor_score_of_training
     )
 
     fig_lstm = get_plot(
@@ -93,7 +91,8 @@ def get_predictions(
         days_in_future_to_predict,
         LSTM_score_of_training,
     )
-    return fig_all, fig_linear, fig_gradian, fig_lstm
+    return_status="Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM:"+LSTM_status
+    return fig_all, fig_linear, fig_gradian, fig_lstm, return_status
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
     if days_to_train + days_in_future_to_predict > df_stockdata.shape[0]:

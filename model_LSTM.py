@@ -14,34 +14,53 @@ def predict_stock_prices(
     optimizer_name,
     learning_rate,
     batch_size,
+    early_stopping,
     stop_check,
     progress_callback,
     lstm_layers
 ):
-    df=df_org[['Close']].copy()
-    #df = df_org.copy()
+    Status="OK"
+    df = df_org.copy()
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(df)
 
-    X_train, X_test, y_train, y_test, X_pred = get_test_train_predict(scaled_data, days_to_train, days_in_future_to_predict, df.columns.get_loc("Close"))
+    X_train, X_test, y_train, y_test, X_pred = get_test_train_predict(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
 
     model = get_model(X_train.shape[1], X_train.shape[2],optimizer_name, learning_rate,loss_function,days_in_future_to_predict,lstm_layers)
 
+    best_val_loss = float('inf')
+    patience = early_stopping
+    no_improvement = 0
+    loss = 0
+    current_val_loss=0
     for epoch in range(epochs):
-        progress_callback(epoch, epochs)
+        progress_callback(epoch, epochs,loss, current_val_loss)
         if stop_check():
-            print(f"Training stopped at epoch {epoch}")
+            Status =(f"User clicked Stop Training, stopped at epoch {epoch}")
             break
 
         print(f"{epoch} / {epochs}")
-        model.fit(
+        train_effect=model.fit(
             X_train,
             y_train,
             epochs=1,
             batch_size=batch_size,
             validation_data=(X_test, y_test),
         )
+        loss=train_effect.history['loss'][0]
+        current_val_loss = train_effect.history['val_loss'][0]
+        if current_val_loss < best_val_loss:
+            best_val_loss = current_val_loss
+            no_improvement = 0
+            model.save_weights('saved_weights/best_model.weights.h5')
+        else:
+            no_improvement += 1
     
+        if no_improvement >= patience:
+            Status=(f"Early stopping at epoch {epoch}")
+            model.load_weights('saved_weights/best_model.weights.h5')
+            break
+
     test_predictions = model.predict(X_test)
     test_predictions = inverse_scaller(test_predictions, df, scaler)
 
@@ -51,16 +70,16 @@ def predict_stock_prices(
 
     score = get_score(test_predictions,y_test,loss_function,scaler,df)
 
-    return (test_predictions, future_predictions,score)
+    return (test_predictions, future_predictions,score, Status)
 
 ############################# functions
 
-def get_test_train_predict(df, days_to_train,future_days, close_index):
+def get_test_train_predict(df, days_to_train,future_days,close_index):
     X = []
     y = []
     for i in range(days_to_train, len(df)-future_days):
 
-        X.append(df[i - days_to_train : i,close_index])
+        X.append(df[i - days_to_train : i])
         y.append(df[i:i+future_days, close_index])
 
     X=np.array(X)
@@ -68,17 +87,14 @@ def get_test_train_predict(df, days_to_train,future_days, close_index):
     X_train, X_test = X[:-1], X[-1:]
     y_train, y_test = y[:-1], y[-1:]
 
-
-    X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df.shape[1]))
-    X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df.shape[1]))
-
-    y_train = y_train.reshape((y_train.shape[0], y_train.shape[1], df.shape[1]))
-    y_test = y_test.reshape((y_test.shape[0], y_test.shape[1], df.shape[1]))
-
-    X_pred = df[-days_to_train:]
-    X_pred=np.array(X_pred)
-    X_pred = X_pred.reshape((X_pred.shape[0], X_pred.shape[1], df.shape[1]))
+    X_train = X_train.reshape((X_train.shape[0], days_to_train, df.shape[1]))
+    X_test = X_test.reshape((X_test.shape[0], days_to_train, df.shape[1]))
+    y_train = y_train.reshape((y_train.shape[0], future_days, 1))
+    y_test = y_test.reshape((y_test.shape[0], future_days, 1))
     
+    X_pred = [df[-days_to_train:]]
+    X_pred=np.array(X_pred)
+    X_pred = X_pred.reshape((X_pred.shape[0], days_to_train, df.shape[1]))
     return X_train, X_test, y_train, y_test, X_pred
 
 
@@ -120,45 +136,12 @@ def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_fu
     return model
 
 
-def inverse_scaller(predictions, df_org, scaler):
-    temp_array = np.zeros((predictions.shape[1], df_org.shape[1]))
-    temp_array[:, df_org.columns.get_loc("Close")] = predictions.flatten()
+def inverse_scaller(predictions, df, scaler):
+    temp_array = np.zeros((predictions.shape[1], df.shape[1]))
+    temp_array[:, df.columns.get_loc("Close")] = predictions.flatten()
     predictions_original = scaler.inverse_transform(temp_array)
-    predictions_close = predictions_original[:, df_org.columns.get_loc("Close")]
+    predictions_close = predictions_original[:, df.columns.get_loc("Close")]
     return predictions_close
-
-
-
-
-
-
-
-
-def get_predicted_new_prices(
-    df_org,
-    days_in_future_to_predict,
-    model,
-    days_to_train,
-    scaler,
-    X_test,
-    y_test,
-    last_sequence=None,
-):
-    future_predictions = []
-    if last_sequence is None:
-        last_sequence = X_test[-1]
-        last_sequence = np.roll(last_sequence, -1, axis=0)
-        last_sequence[-1, df_org.columns.get_loc("Close")] = y_test[-1]
-
-    for _ in range(days_in_future_to_predict):
-        pred = model.predict(last_sequence.reshape(1, days_to_train, df_org.shape[1]))
-        future_predictions.append(pred[0, 0])
-        last_sequence = np.roll(last_sequence, -1, axis=0)
-        last_sequence[-1, df_org.columns.get_loc("Close")] = pred[0, 0]
-
-    future_predictions = np.array(future_predictions).reshape(-1, 1)
-    future_predictions = inverse_scaller(future_predictions, df_org, scaler)
-    return future_predictions
 
 
 
