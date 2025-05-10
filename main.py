@@ -40,11 +40,10 @@ def get_predictions(
             days_in_future_to_predict,
             days_to_train,
             Gradian_params,
-            loss_function
-            #stop_check,
-            # progress_callback,
-            
-        )
+            loss_function,
+            stop_check,
+            progress_callback
+            )
     )
   
     LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training,LSTM_status= (
@@ -63,7 +62,7 @@ def get_predictions(
             lstm_layers
         )
     )
-
+    
     fig_all = show_all_historical_data(df_stockdata)
     fig_linear = get_plot(
         df_stockdata,
@@ -71,7 +70,8 @@ def get_predictions(
         LINEAR_best_days_to_train,
         LINEAR_result_of_predictions,
         days_in_future_to_predict,
-        LINEAR_score_of_training
+        LINEAR_score_of_training,
+        "Linear Regression"
     )
 
     fig_gradian = get_plot(
@@ -80,7 +80,8 @@ def get_predictions(
         days_to_train,
         XGBRegressor_result_of_predictions,
         days_in_future_to_predict,
-        XGBRegressor_score_of_training
+        XGBRegressor_score_of_training,
+        "XGBRegression"
     )
 
     fig_lstm = get_plot(
@@ -90,6 +91,7 @@ def get_predictions(
         LSTM_result_of_predictions,
         days_in_future_to_predict,
         LSTM_score_of_training,
+        "LSTM"
     )
     return_status="Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM:"+LSTM_status
     return fig_all, fig_linear, fig_gradian, fig_lstm, return_status

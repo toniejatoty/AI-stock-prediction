@@ -15,7 +15,7 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
     progress = gr.Progress()
 
     lstm_layers = []
-    params_per_layer = 6
+    params_per_layer = 5
     gradian_params = {
         "n_estimators": n_estimators,
         "learning_rate": learning_rate_gradian,
@@ -30,12 +30,11 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
             'recurrent_dropout': layer_params[2],
             'activation': layer_params[3],
             'recurrent_activation': layer_params[4],
-            'return_sequences': layer_params[5] if i < (num_layers-1)*params_per_layer else False
         })
 
 
-    def update_progress(epoch, total_epochs, loss, val_loss):
-        progress((epoch / total_epochs), desc=f"Epoch {epoch}/{total_epochs}, loss = {np.round(loss,5)}, val_loss = {np.round(val_loss,5)}")
+    def update_progress(name, epoch, total_epochs, loss, val_loss):
+        progress((epoch / total_epochs), desc=f"I am in {name}, Progress {epoch}/{total_epochs}, loss = {np.round(loss,5)}, val_loss = {np.round(val_loss,5)}")
 
     try:
         fig_all, fig_linear, fig_gradian, fig_lstm, status = get_predictions(
@@ -71,14 +70,14 @@ with demo:
     gr.Markdown("## General Information")
     with gr.Row():
         ticker = gr.Textbox(label="Ticker", value="NVDA")
-        days_to_predict = gr.Slider(1, 365, value=30, label="Days to predict")
-        start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="1900-01-01")
-        days_to_train = gr.Slider(1, 1000, value=365, label="Days to train")
+        days_to_predict = gr.Slider(1, 365, value=20, label="Days to predict")
+        start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="2000-01-01")
+        days_to_train = gr.Slider(1, 1000, value=60, label="Days to train")
         loss_function = gr.Dropdown(choices=["mse", "mae"], label="Loss function", value="mse")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## XGBRegressor")
     with gr.Row():
-        n_estimators = gr.Slider(1, 1000, value=200, step=1, label="Number of estimators")
+        n_estimators = gr.Slider(1, 1000, value=300, step=1, label="Number of estimators")
         learning_rate_gradian = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
         max_depth = gr.Slider(1, 20,value=7, step=1, label="Max Depth")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
@@ -106,10 +105,9 @@ with demo:
                 recurrent_dropout = gr.Slider(0.0, 0.9, value=0.0, label="Recurrent Dropout")
                 activation = gr.Dropdown(ACTIVATIONS, value='tanh', label="Activation")
                 recurrent_activation = gr.Dropdown(RECURRENT_ACTIVATIONS, value='sigmoid', label="Recurrent Activation")
-                return_sequences = gr.Checkbox(value=(i < MAX_LAYERS-1), label="Return Sequences")
 
                 lstm_layers_ui.append((layer_row, units, dropout, recurrent_dropout, 
-                                     activation, recurrent_activation, return_sequences))
+                                     activation, recurrent_activation))
             if i < MAX_LAYERS - 1:
                 separator = gr.HTML("<hr style='margin: 15px 0; border-top: 2px solid #ccc'>", 
                                   visible=(i < 1))

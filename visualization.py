@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def get_plot(
@@ -10,7 +11,10 @@ def get_plot(
     predictions,
     days_in_future_to_predict,
     score_of_training,
+    title
 ):
+    if np.any(result_of_testing == None) :
+        return None
     df = df.tail(days_in_future_to_predict * 2)
 
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -30,7 +34,7 @@ def get_plot(
     ax.plot(future_dates, predictions, label="Prediction", marker="o")
     ax.set_xlabel("Date")
     ax.set_ylabel("Stock price")
-    ax.set_title("Stock price prediction")
+    ax.set_title(f"{title} ({df.index[0].date()} - {future_dates[-1].date()})")
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
     ax.legend(
         title=f"Number of days to train: {days_to_train}\nNumber of days to predict: {days_in_future_to_predict}\nScore:{score_of_training:.4f}"

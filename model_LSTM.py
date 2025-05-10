@@ -3,7 +3,7 @@ from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 from tensorflow.keras.models import Sequential  # type: ignore
 from tensorflow.keras.layers import LSTM, Dense, Dropout  # type: ignore
-from tensorflow.keras.optimizers import Adam, SGD, RMSprop, Adagrad # type: ignore
+from tensorflow.keras.optimizers import Adam, SGD, RMSprop # type: ignore
 
 def predict_stock_prices(
     df_org,
@@ -34,11 +34,12 @@ def predict_stock_prices(
     loss = 0
     current_val_loss=0
     for epoch in range(epochs):
-        progress_callback(epoch, epochs,loss, current_val_loss)
         if stop_check():
-            Status =(f"User clicked Stop Training, stopped at epoch {epoch}")
+            Status =(f" User clicked Stop Training, stopped at epoch {epoch}")
+            if epoch == 0:
+                return None, None,None, Status
             break
-
+        progress_callback("I am in LSTM",epoch, epochs,loss, current_val_loss)
         print(f"{epoch} / {epochs}")
         train_effect=model.fit(
             X_train,
@@ -99,29 +100,25 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
 
 
 
-def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function, days_in_future_to_predict ,lstm_layers=None):
+def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function, days_in_future_to_predict ,lstm_layers):
     model = Sequential()
     
     for i, layer_config in enumerate(lstm_layers):
-        if i == len(lstm_layers) - 1:
-            layer_config['return_sequences'] = False
         if i == 0:
             model.add(LSTM(
                 units=layer_config['units'],
-                return_sequences=layer_config['return_sequences'],
+                return_sequences=(i != len(lstm_layers) - 1),
                 activation=layer_config['activation'],
                 recurrent_activation=layer_config['recurrent_activation'],
-    #            dropout=layer_config['dropout'],
                 recurrent_dropout=layer_config['recurrent_dropout'],
                 input_shape=(input_shape1, input_shape2)
             ))
         else:
             model.add(LSTM(
                 units=layer_config['units'],
-                return_sequences=layer_config['return_sequences'],
+                return_sequences=(i != len(lstm_layers) - 1),
                 activation=layer_config['activation'],
                 recurrent_activation=layer_config['recurrent_activation'],
-           #     dropout=layer_config['dropout'],
                 recurrent_dropout=layer_config['recurrent_dropout']
             ))
         
