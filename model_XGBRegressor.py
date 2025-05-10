@@ -11,7 +11,7 @@ def predict_stock_prices(
 ):
     Status="OK"
     df = df_org.copy()
-    required_cols = ["Open", "High", "Low", "Close", "Volume"]
+    required_cols = df.columns
     for i in range(1, days_in_future + 1):
         df[f'target_{i}'] = df['Close'].shift(-i)
     df.dropna(inplace=True)
@@ -52,11 +52,6 @@ def predict_stock_prices(
     score = get_score(test_preds, y_test_vals, loss_function)
 
     return test_preds, future_preds, score,Status
-
-
-
-
-
 
 
 def get_score(predicted, real, loss_function):
