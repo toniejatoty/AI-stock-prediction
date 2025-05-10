@@ -18,18 +18,14 @@ def predict_stock_prices(
     progress_callback,
     lstm_layers
 ):
-    df_org=df_org[['Close']]
+    df=df_org[['Close']].copy()
+    #df = df_org.copy()
     scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(df_org)
-    X, y = create_sequences(scaled_data, days_to_train, df_org.columns.get_loc("Close"))
+    scaled_data = scaler.fit_transform(df)
 
-    X_train, X_test = X[:-days_in_future_to_predict], X[-days_in_future_to_predict:]
-    y_train, y_test = y[:-days_in_future_to_predict], y[-days_in_future_to_predict:]
+    X_train, X_test, y_train, y_test, X_pred = get_test_train_predict(scaled_data, days_to_train, days_in_future_to_predict, df.columns.get_loc("Close"))
 
-    X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df_org.shape[1]))
-    X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df_org.shape[1]))
-
-    model = get_model(X_train.shape[1], df_org.shape[1],optimizer_name, learning_rate,loss_function,lstm_layers)
+    model = get_model(X_train.shape[1], X_train.shape[2],optimizer_name, learning_rate,loss_function,days_in_future_to_predict,lstm_layers)
 
     for epoch in range(epochs):
         progress_callback(epoch, epochs)
@@ -38,50 +34,56 @@ def predict_stock_prices(
             break
 
         print(f"{epoch} / {epochs}")
-        X_val = get_X_test(
-            X_test, model, df_org, days_to_train, days_in_future_to_predict
-        )
         model.fit(
             X_train,
             y_train,
             epochs=1,
             batch_size=batch_size,
-            validation_data=(X_val, y_test),
+            validation_data=(X_test, y_test),
         )
-    predictions = model.predict(X_test)
-    predictions = inverse_scaller(predictions, df_org, scaler)
+    
+    test_predictions = model.predict(X_test)
+    test_predictions = inverse_scaller(test_predictions, df, scaler)
 
-    test_predictions = get_predicted_new_prices(
-        df_org,
-        days_in_future_to_predict,
-        model,
-        days_to_train,
-        scaler,
-        X_test,
-        y_test,
-        X_test[0],
-    )
 
-    future_predictions = get_predicted_new_prices(
-        df_org, days_in_future_to_predict, model, days_to_train, scaler, X_test, y_test
-    )
-    score = get_score(test_predictions,y_test,loss_function,scaler,df_org)
+    future_predictions = model.predict(X_pred)
+    future_predictions=inverse_scaller(future_predictions, df, scaler)
 
-    return (test_predictions, future_predictions,score,predictions)
+    score = get_score(test_predictions,y_test,loss_function,scaler,df)
+
+    return (test_predictions, future_predictions,score)
 
 ############################# functions
 
-def create_sequences(df, days_to_train, close_index):
+def get_test_train_predict(df, days_to_train,future_days, close_index):
     X = []
     y = []
-    for i in range(days_to_train, len(df)):
-        X.append(df[i - days_to_train : i])
-        y.append(df[i, close_index])
-    return np.array(X), np.array(y)
+    for i in range(days_to_train, len(df)-future_days):
+
+        X.append(df[i - days_to_train : i,close_index])
+        y.append(df[i:i+future_days, close_index])
+
+    X=np.array(X)
+    y=np.array(y)
+    X_train, X_test = X[:-1], X[-1:]
+    y_train, y_test = y[:-1], y[-1:]
+
+
+    X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df.shape[1]))
+    X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df.shape[1]))
+
+    y_train = y_train.reshape((y_train.shape[0], y_train.shape[1], df.shape[1]))
+    y_test = y_test.reshape((y_test.shape[0], y_test.shape[1], df.shape[1]))
+
+    X_pred = df[-days_to_train:]
+    X_pred=np.array(X_pred)
+    X_pred = X_pred.reshape((X_pred.shape[0], X_pred.shape[1], df.shape[1]))
+    
+    return X_train, X_test, y_train, y_test, X_pred
 
 
 
-def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function, lstm_layers=None):
+def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function, days_in_future_to_predict ,lstm_layers=None):
     model = Sequential()
     
     for i, layer_config in enumerate(lstm_layers):
@@ -110,8 +112,7 @@ def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_fu
         if i < len(lstm_layers) - 1:
             model.add(Dropout(layer_config['dropout']))
     
-    model.add(Dense(units=1))
-    
+    model.add(Dense(units=days_in_future_to_predict))
     opt = get_optimizer(optimizer_name, learning_rate)
     model.compile(optimizer=opt, loss=loss_function)
     model.summary()
@@ -120,7 +121,7 @@ def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_fu
 
 
 def inverse_scaller(predictions, df_org, scaler):
-    temp_array = np.zeros((predictions.shape[0], df_org.shape[1]))
+    temp_array = np.zeros((predictions.shape[1], df_org.shape[1]))
     temp_array[:, df_org.columns.get_loc("Close")] = predictions.flatten()
     predictions_original = scaler.inverse_transform(temp_array)
     predictions_close = predictions_original[:, df_org.columns.get_loc("Close")]
@@ -129,18 +130,7 @@ def inverse_scaller(predictions, df_org, scaler):
 
 
 
-def get_X_test(X_test, model, df_org, days_to_train, days_in_future_to_predict):
-    result = []
-    last_sequence2 = X_test[0].copy()
 
-    for _ in range(days_in_future_to_predict):
-        pred2 = model.predict(
-            last_sequence2.reshape(1, days_to_train, df_org.shape[1]), verbose=0
-        )
-        last_sequence2 = np.roll(last_sequence2, -1, axis=0)
-        last_sequence2[-1, df_org.columns.get_loc("Close")] = pred2[0, 0]
-        result.append(last_sequence2)
-    return np.array(result)
 
 
 

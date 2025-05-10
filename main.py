@@ -1,7 +1,6 @@
-import pandas as pd
 import get_data
 import model_LinearRegression
-import model_Gradian_boost
+import model_XGBRegressor
 import model_LSTM
 from visualization import get_plot, show_all_historical_data
 
@@ -24,9 +23,10 @@ def get_predictions(
     try:
         df_stockdata = get_data.get_stock_data(symbol, start_date)
     except Exception as e:
-        raise ValueError(f"Probably you gave bad ticker: {symbol}")
+        raise ValueError(f"Probably you gave bad ticker: {symbol}, origin: {str(e)}")
     
     days_to_train,days_in_future_to_predict = validate_params(days_to_train,df_stockdata,days_in_future_to_predict)
+    
     (
         LINEAR_result_of_testing_to_visualize,
         LINEAR_result_of_predictions,
@@ -38,7 +38,7 @@ def get_predictions(
 
 
     GRADIAN_result_of_testing_to_visualize, GRADIAN_result_of_predictions, GRADIAN_score_of_training= (
-        model_Gradian_boost.predict_stock_prices(
+        model_XGBRegressor.predict_stock_prices(
             df_stockdata,
             days_in_future_to_predict,
             days_to_train,
@@ -49,9 +49,8 @@ def get_predictions(
             
         )
     )
-
-    
-    LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training, LSTM_result_of_testing_on_XTest= (
+  
+    LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training= (
         model_LSTM.predict_stock_prices(
             df_stockdata,
             days_in_future_to_predict,
@@ -93,7 +92,6 @@ def get_predictions(
         LSTM_result_of_predictions,
         days_in_future_to_predict,
         LSTM_score_of_training,
-        LSTM_result_of_testing_on_XTest
     )
     return fig_all, fig_linear, fig_gradian, fig_lstm
 
