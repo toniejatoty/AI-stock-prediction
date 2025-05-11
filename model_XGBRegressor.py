@@ -21,7 +21,7 @@ def predict_stock_prices(
     #get training and test data
     X = []
     y = {f'target_{i}': [] for i in range(1, days_in_future + 1)}
-    
+
     for i in range(days_to_train, len(df)):
         X.append(df[required_cols].iloc[i - days_to_train:i].values.flatten())
         for j in range(1, days_in_future + 1):
@@ -44,7 +44,6 @@ def predict_stock_prices(
     current_val_loss=0
     loss=0
     
-
     for day in range(1, days_in_future + 1):
         progress_callback("XGBRegressor", day, days_in_future,loss, current_val_loss)
         if stop_check():

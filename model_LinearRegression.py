@@ -22,7 +22,7 @@ def predict_stock_prices(df_org, days_in_future_to_predict, loss_function):
             i: infinity
             for i in range(min(200, max_size_df - days_in_future_to_predict), 50, -10)
         })
-    days_in_past_to_train.update({i: infinity for i in range(50, 10, -5)})
+    days_in_past_to_train.update({i: infinity for i in range(min(50, max_size_df - days_in_future_to_predict), 10, -5)})
     model = LinearRegression()
     for days_to_train in days_in_past_to_train:
         predictions, y_test = get_prediction(

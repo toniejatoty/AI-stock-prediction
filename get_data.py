@@ -5,7 +5,6 @@ def get_stock_data(symbol, start_date):
     start_date = validade_params(symbol, start_date)
     history_prices = get_history_prices(symbol, start_date)
     income_statement = get_income_statement(symbol)
- 
     if income_statement.empty:
         df_stock_full_info = history_prices
     else:
@@ -14,23 +13,25 @@ def get_stock_data(symbol, start_date):
             df_stock_full_info_with_nan
         )
     df_stock_full_info = drop_columns_with_only_nan_and_much_zeros(df_stock_full_info)
-    df_stock_full_info = df_stock_full_info.iloc[:-150]
+    #df_stock_full_info = df_stock_full_info.iloc[:-150]
     return df_stock_full_info
 
 
 def validade_params(symbol, start_date):
-    try:
-        company = yf.Ticker(symbol)
-        hist = company.history(period="max")
-        if hist.empty:
-            raise ValueError(f"Can't find data for that ticker: {symbol}")
-        available_start = pd.to_datetime(hist.index[0]).tz_localize(None)
-        start_date=pd.to_datetime(start_date)
-        return max(start_date, available_start)
+    company = yf.Ticker(symbol)
+    hist = company.history(period="max")
+    if hist.empty:
+        raise ValueError(f"Can't find data for that ticker: {symbol}")
+    available_start = pd.to_datetime(hist.index[0]).tz_localize(None)
+    start_date=pd.to_datetime(start_date)
 
-    except Exception as e:
-        print("jest blad")
-        return available_start
+    today = pd.to_datetime("today").normalize()
+    business_days_diff = len(pd.bdate_range(start_date, today))
+    print(business_days_diff)
+    if(business_days_diff <=20):
+        raise ValueError(f"Please give wider range Start date")
+    return max(start_date, available_start)
+
 
 def get_history_prices(symbol, start_date):
     company = yf.Ticker(symbol)

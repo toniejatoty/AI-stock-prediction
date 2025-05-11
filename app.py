@@ -1,3 +1,4 @@
+import traceback
 import gradio as gr
 import numpy as np
 from main import get_predictions
@@ -55,6 +56,8 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
         )
         return (status, fig_all, fig_linear,fig_gradian, fig_lstm)
     except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"Error: {str(e)}\nTraceback:\n{error_trace}")
         return (f"Error: {str(e)}", None, None, None, None)
 
 def stop_training():

@@ -24,9 +24,9 @@ def get_predictions(
     try:
         df_stockdata = get_data.get_stock_data(symbol, start_date)
     except Exception as e:
-        raise ValueError(f"Probably you gave bad ticker: {symbol}, origin: {str(e)}")
+        raise ValueError(f"{e}")
     
-    days_to_train,days_in_future_to_predict = validate_params(days_to_train,df_stockdata,days_in_future_to_predict)
+    days_to_train,days_in_future_to_predict, Status_main = validate_params(days_to_train,df_stockdata,days_in_future_to_predict)
     
     LINEAR_result_of_testing_to_visualize,LINEAR_result_of_predictions,LINEAR_best_days_to_train,LINEAR_score_of_training, LINEAR_status=(
          model_LinearRegression.predict_stock_prices(
@@ -93,29 +93,19 @@ def get_predictions(
         LSTM_score_of_training,
         "LSTM"
     )
-    return_status="Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM:"+LSTM_status
+    return_status=""
+    if Status_main !=None:
+        return_status="main.py:"+Status_main+"\n"
+    return_status=return_status+"Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM:"+LSTM_status
+    
     return fig_all, fig_linear, fig_gradian, fig_lstm, return_status
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
+    Status=None
     if days_to_train + days_in_future_to_predict > df_stockdata.shape[0]:
         proc = int(0.8 * df_stockdata.shape[0])
-        days_to_train = proc-1
+        days_to_train = proc-2
         days_in_future_to_predict = df_stockdata.shape[0] -proc
+        Status = f"You provided days to predict + days to train > Start date, thus i set: days to train:{days_to_train}, days to predict:{days_in_future_to_predict}  "
         
-    return days_to_train,days_in_future_to_predict
-
-# def update_progress(epoch, total_epochs):
-#     return
-# fig_all, fig_linear, fig_lstm = get_predictions(
-#             30,
-#             "AAPL",
-#             pd.to_datetime(20180310),
-#             10,
-#             1,
-#             "mae",
-#             "adam",
-#             0.1,
-#             32,
-#             lambda: True,
-#             update_progress
-#         )
+    return days_to_train,days_in_future_to_predict, Status
