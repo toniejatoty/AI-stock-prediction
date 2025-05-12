@@ -62,31 +62,34 @@ def predict_stock_prices(
             model.load_weights('saved_weights/best_model.weights.h5')
             break
 
-    test_predictions = model.predict(X_test)
+    test_predictions = model.predict(X_test[-1:])
     test_predictions = inverse_scaller(test_predictions, df, scaler)
 
 
     future_predictions = model.predict(X_pred)
     future_predictions=inverse_scaller(future_predictions, df, scaler)
 
-    score = get_score(test_predictions,y_test,loss_function,scaler,df)
+    score = get_score(test_predictions,y_test[-1:],loss_function,scaler,df)
 
     return (test_predictions, future_predictions,score, Status)
 
 ############################# functions
 
 def get_test_train_predict(df, days_to_train,future_days,close_index):
+    proc=0.8
+    proc = (df.shape[0]-2*days_to_train-future_days) *proc
+    proc  = int(proc)
     X = []
     y = []
     for i in range(days_to_train, len(df)-future_days):
-
         X.append(df[i - days_to_train : i])
         y.append(df[i:i+future_days, close_index])
 
     X=np.array(X)
     y=np.array(y)
-    X_train, X_test = X[:-1], X[-1:]
-    y_train, y_test = y[:-1], y[-1:]
+    index_between_train_test = proc+days_to_train
+    X_train, X_test = X[:index_between_train_test], X[index_between_train_test:]
+    y_train, y_test = y[:index_between_train_test], y[index_between_train_test:]
 
     X_train = X_train.reshape((X_train.shape[0], days_to_train, df.shape[1]))
     X_test = X_test.reshape((X_test.shape[0], days_to_train, df.shape[1]))
