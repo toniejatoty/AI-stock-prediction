@@ -28,7 +28,7 @@ def predict_stock_prices(
             Status =(f" User clicked Stop Training.Stopped at day {day}")
             return None, None, None, Status
         model = XGBRegressor(**model_params)
-        model.fit(X_train, y_train[f'target_{day}'])
+        model.fit(X_train, y_train[f'target_{day}'], eval_set=[(X_test, y_test[[-days_in_future+day-1]].reshape(1, -1))])
         pred = model.predict(X_test)
         test_preds.append(pred)
         future_preds.append(model.predict(future_X))
