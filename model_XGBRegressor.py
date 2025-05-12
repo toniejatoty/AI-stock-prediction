@@ -15,7 +15,6 @@ def predict_stock_prices(
 
     X_train, y_train, X_test, y_test, future_X = get_split_data(df_org, days_to_train, days_in_future)
     
-
     #train and predict 
     models = {}
     test_preds = []
@@ -36,9 +35,7 @@ def predict_stock_prices(
         models[f'model_day_{day}'] = model
 
         train_pred = model.predict(X_train[-1].reshape(1, -1))
-        loss = get_score(train_pred.flatten(), df_org['Close'].iloc[-days_in_future+day-2].flatten(), loss_function)
-        print(train_pred.reshape(1, -1))
-        print(df_org['Close'].iloc[-days_in_future+day-2].reshape(1, -1))
+        loss = get_score(train_pred.flatten(), df_org['Close'].iloc[-days_to_train-days_in_future+day-1].flatten(), loss_function)
         current_val_loss = get_score(pred.reshape(1, -1), y_test[[-days_in_future+day-1]].reshape(1, -1), loss_function)
     test_preds = np.array(test_preds)
     
@@ -59,7 +56,8 @@ def get_split_data(df_org, days_to_train, days_in_future):
     df = df_org.copy()
     required_cols = df.columns
     for i in range(1, days_in_future + 1):
-        df[f'target_{i}'] = df['Close'].shift(-i)
+        new_columns = {f'target_{i}': df['Close'].shift(-i)}
+        df = df.assign(**new_columns)
     df.dropna(inplace=True)
     
     df_training = df.iloc[0:-days_to_train]

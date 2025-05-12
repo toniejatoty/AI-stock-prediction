@@ -9,8 +9,8 @@ ACTIVATIONS = ['tanh', 'relu', 'sigmoid', 'linear']
 RECURRENT_ACTIVATIONS = ['sigmoid', 'hard_sigmoid', 'tanh']
 
 def run_model(ticker, days_to_predict, start_date, days_to_train,
-              n_estimators, learning_rate_gradian, max_depth,
-              epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,early_stopping, num_layers, *LSTM_layers_info):
+              n_estimators, learning_rate_gradian, max_depth, XGB_early_stopping,
+              epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size, LSTM_early_stopping, num_layers, *LSTM_layers_info):
     global should_stop
     should_stop = False
     progress = gr.Progress()
@@ -21,8 +21,8 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
         "n_estimators": n_estimators,
         "learning_rate": learning_rate_gradian,
         "max_depth": max_depth,
-        "eval_metric": "rmse" if loss_function == "mse" else loss_function
-    }
+        "early_stopping_rounds":XGB_early_stopping,
+        "eval_metric": "rmse" if loss_function == "mse" else loss_function}
     for i in range(0, num_layers * params_per_layer, params_per_layer):
         layer_params = LSTM_layers_info[i:i+params_per_layer]
         lstm_layers.append({
@@ -49,7 +49,7 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
             optimizer_name,
             learning_rate_lstm,
             batch_size,
-            early_stopping,
+            LSTM_early_stopping,
             lambda: should_stop,
             update_progress,
             lstm_layers
@@ -83,6 +83,7 @@ with demo:
         n_estimators = gr.Slider(1, 1000, value=300, step=1, label="Number of estimators")
         learning_rate_gradian = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
         max_depth = gr.Slider(1, 20,value=7, step=1, label="Max Depth")
+        XGB_early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## LSTM")
     with gr.Row():
@@ -90,7 +91,7 @@ with demo:
         optimizer_name = gr.Dropdown(choices=["adam", "sgd", "rmsprop"], label="Optimizer", value="adam")
         learning_rate_lstm = gr.Slider(0.0001, 0.1, value=0.001, step=0.0001, label="Learning rate")
         batch_size = gr.Slider(8, 512, step=8, value=32, label="Batch Size")
-        early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
+        LSTM_early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
     num_of_layers_def=2    
     with gr.Row():
         num_layers = gr.Slider(1, MAX_LAYERS, value=num_of_layers_def, step=1, label="Number of LSTM Layers")
@@ -140,8 +141,8 @@ with demo:
     start_button.click(
         fn=run_model,
         inputs=[ticker, days_to_predict, start_date, days_to_train,
-        n_estimators, learning_rate_gradian, max_depth,
-        epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,early_stopping, num_layers] +
+        n_estimators, learning_rate_gradian, max_depth, XGB_early_stopping,
+        epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,LSTM_early_stopping, num_layers] +
        [comp for (_, *comps) in lstm_layers_ui for comp in comps],
         outputs=[status_output, fig_historical_output, fig_linear_output,fig_gradian_output, fig_lstm_output]
     )
