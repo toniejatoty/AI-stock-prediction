@@ -13,7 +13,7 @@ def get_stock_data(symbol, start_date):
             df_stock_full_info_with_nan
         )
     df_stock_full_info = drop_columns_with_only_nan_and_much_zeros(df_stock_full_info)
-    #df_stock_full_info = df_stock_full_info.iloc[:-150]
+    #df_stock_full_info = df_stock_full_info.iloc[:-20]
     return df_stock_full_info
 
 
@@ -22,14 +22,19 @@ def validade_params(symbol, start_date):
     hist = company.history(period="max")
     if hist.empty:
         raise ValueError(f"Can't find data for that ticker: {symbol}")
+    
     available_start = pd.to_datetime(hist.index[0]).tz_localize(None)
-    start_date=pd.to_datetime(start_date)
-
+    try:
+        start_date=pd.to_datetime(start_date)
+    except:
+        raise ValueError(f"You provided unapropriate start date. Format is YYYY-MM-DD")
+    
     today = pd.to_datetime("today").normalize()
     business_days_diff = len(pd.bdate_range(start_date, today))
-    print(business_days_diff)
-    if(business_days_diff <=20):
-        raise ValueError(f"Please give wider range Start date")
+    if(business_days_diff <=0):
+        raise ValueError(f"Please give past Start date")
+    if(business_days_diff <=10):
+        raise ValueError(f"Please give wider Start date")
     return max(start_date, available_start)
 
 
@@ -59,13 +64,13 @@ def merge(df_stockdata, income_statement):
 
 def delete_useless_col_in_dataframe(df_stockdata):
     close_corr = df_stockdata.corr()["Close"]
-    filtered_corr = close_corr[(close_corr >= -0.5) & (close_corr <= 0.5)]
+    filtered_corr = close_corr[(close_corr >= -0.55) & (close_corr <= 0.55)]
     df_stockdata = df_stockdata.drop(columns=filtered_corr.index)
     return df_stockdata
 
 
 def drop_columns_with_only_nan_and_much_zeros(df_stockdata):
-    proc=0.8
+    proc=0.2
     df_stockdata = df_stockdata.dropna(axis=1, how="all")
     pd.set_option("future.no_silent_downcasting", True)
     df_stockdata = df_stockdata.fillna(0)

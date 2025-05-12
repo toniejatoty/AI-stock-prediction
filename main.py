@@ -102,10 +102,10 @@ def get_predictions(
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
     Status=None
-    if days_to_train + days_in_future_to_predict > df_stockdata.shape[0]:
-        proc = int(0.8 * df_stockdata.shape[0])
-        days_to_train = proc-2
-        days_in_future_to_predict = df_stockdata.shape[0] -proc
-        Status = f"You provided days to predict + days to train > Start date, thus i set: days to train:{days_to_train}, days to predict:{days_in_future_to_predict}  "
+    if 2*days_to_train + days_in_future_to_predict > df_stockdata.shape[0]:
+        proc = int(0.4 * df_stockdata.shape[0])
+        days_to_train = proc
+        days_in_future_to_predict = df_stockdata.shape[0] - (2*proc)
+        Status = f"You provided days to predict + 2*days to train > Start date, thus i set: days to train:{days_to_train}, days to predict:{days_in_future_to_predict}  "
         
     return days_to_train,days_in_future_to_predict, Status

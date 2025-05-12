@@ -15,7 +15,7 @@ def get_plot(
 ):
     if np.any(result_of_testing == None) :
         return None
-    df = df.tail(days_in_future_to_predict * 2)
+    df = df.tail(days_in_future_to_predict * 2+10)
 
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(df.index, df["Close"], label="Real price")

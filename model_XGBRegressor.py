@@ -12,30 +12,9 @@ def predict_stock_prices(
     progress_callback
 ):
     Status="OK"
-    df = df_org.copy()
-    required_cols = df.columns
-    for i in range(1, days_in_future + 1):
-        df[f'target_{i}'] = df['Close'].shift(-i)
-    df.dropna(inplace=True)
 
-    #get training and test data
-    X = []
-    y = {f'target_{i}': [] for i in range(1, days_in_future + 1)}
-
-    for i in range(days_to_train, len(df)):
-        X.append(df[required_cols].iloc[i - days_to_train:i].values.flatten())
-        for j in range(1, days_in_future + 1):
-            y[f'target_{j}'].append(df[f'target_{j}'].iloc[i])
+    X_train, y_train, X_test, y_test, future_X = get_split_data(df_org, days_to_train, days_in_future)
     
-    X = np.array(X)
-    y = {k: np.array(v) for k, v in y.items()}
-
-    X_train, X_test = X[:-1], X[-1].reshape(1, -1)
-    y_train = {k: v[:-1] for k, v in y.items()}
-    y_test = {k: v[-1] for k, v in y.items()}
-    y_test = np.array([y_test[f'target_{i}'] for i in range(1, days_in_future + 1)])
-    
-    future_X = df_org[required_cols].values[-days_to_train:].flatten().reshape(1, -1)
 
     #train and predict 
     models = {}
@@ -57,8 +36,9 @@ def predict_stock_prices(
         models[f'model_day_{day}'] = model
 
         train_pred = model.predict(X_train[-1].reshape(1, -1))
-        loss = get_score(train_pred.reshape(1, -1), df_org['Close'].iloc[-days_in_future+day-2].reshape(1, -1), loss_function)
-
+        loss = get_score(train_pred.flatten(), df_org['Close'].iloc[-days_in_future+day-2].flatten(), loss_function)
+        print(train_pred.reshape(1, -1))
+        print(df_org['Close'].iloc[-days_in_future+day-2].reshape(1, -1))
         current_val_loss = get_score(pred.reshape(1, -1), y_test[[-days_in_future+day-1]].reshape(1, -1), loss_function)
     test_preds = np.array(test_preds)
     
@@ -73,4 +53,29 @@ def get_score(predicted, real, loss_function):
     elif loss_function == "mae":
         score = mean_absolute_error(predicted, real)
     return score
-        
+
+
+def get_split_data(df_org, days_to_train, days_in_future):
+    df = df_org.copy()
+    required_cols = df.columns
+    for i in range(1, days_in_future + 1):
+        df[f'target_{i}'] = df['Close'].shift(-i)
+    df.dropna(inplace=True)
+    
+    df_training = df.iloc[0:-days_to_train]
+    df_test =df.iloc[-days_to_train:]
+    X_train = []
+    y_train = {f'target_{i}': [] for i in range(1, days_in_future + 1)}
+
+    for i in range(days_to_train, len(df_training)):
+        X_train.append(df_training[required_cols].iloc[i - days_to_train:i].values.flatten())
+        for j in range(1, days_in_future + 1):
+            y_train[f'target_{j}'].append(df_training[f'target_{j}'].iloc[i])
+    
+    X_train = np.array(X_train)
+    y_train = {k: np.array(v) for k, v in y_train.items()}
+    X_test = np.array(df_test[required_cols]).flatten().reshape(1,-1)
+    y_test = np.array(df_org['Close'].iloc[-days_in_future:])
+    
+    future_X = df_org[required_cols].values[-days_to_train:].flatten().reshape(1, -1)
+    return X_train, y_train, X_test, y_test, future_X
