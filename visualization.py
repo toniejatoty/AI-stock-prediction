@@ -25,6 +25,7 @@ def get_plot(
         dates_to_visualize_test,
         result_of_testing,
         label="result_of_testing",
+        marker="o"
     )
 
     last_date = df.index[-1]

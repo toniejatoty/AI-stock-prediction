@@ -72,7 +72,7 @@ with demo:
 
     gr.Markdown("## General Information")
     with gr.Row():
-        ticker = gr.Textbox(label="Ticker", value="NVDA")
+        ticker = gr.Textbox(label="Ticker", value="AAPL")
         days_to_predict = gr.Slider(1, 365, value=20, label="Days to predict")
         start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="2000-01-01")
         days_to_train = gr.Slider(1, 1000, value=60, label="Days to train")
@@ -83,7 +83,7 @@ with demo:
         n_estimators = gr.Slider(1, 1000, value=300, step=1, label="Number of estimators")
         learning_rate_gradian = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
         max_depth = gr.Slider(1, 20,value=7, step=1, label="Max Depth")
-        XGB_early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
+        XGB_early_stopping=gr.Slider(1,500,value=100, label="Early stopping patience")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## LSTM")
     with gr.Row():

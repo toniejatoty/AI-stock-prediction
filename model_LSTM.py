@@ -40,7 +40,6 @@ def predict_stock_prices(
                 return None, None,None, Status
             break
         progress_callback("I am in LSTM",epoch, epochs,loss, current_val_loss)
-        print(f"{epoch} / {epochs}")
         train_effect=model.fit(
             X_train,
             y_train,

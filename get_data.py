@@ -13,7 +13,7 @@ def get_stock_data(symbol, start_date):
             df_stock_full_info_with_nan
         )
     df_stock_full_info = drop_columns_with_only_nan_and_much_zeros(df_stock_full_info)
-    #df_stock_full_info = df_stock_full_info.iloc[:-21]
+    df_stock_full_info = df_stock_full_info.iloc[:-20]
     return df_stock_full_info
 
 
