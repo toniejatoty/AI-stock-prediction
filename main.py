@@ -1,4 +1,5 @@
 import get_data
+import model_LSTM2
 import model_LinearRegression
 import model_XGBRegressor
 import model_LSTM
@@ -63,6 +64,23 @@ def get_predictions(
         )
     )
     
+    LSTM2_result_of_testing_to_visualize, LSTM2_result_of_predictions, LSTM2_score_of_training,LSTM2_status= (
+        model_LSTM2.predict_stock_prices(
+            df_stockdata,
+            days_in_future_to_predict,
+            days_to_train,
+            epochs,
+            loss_function,
+            optimizer_name,
+            learning_rate,
+            batch_size,
+            early_stopping,
+            stop_check,
+            progress_callback,
+            lstm_layers
+        )
+    )
+
     fig_all = show_all_historical_data(df_stockdata)
     fig_linear = get_plot(
         df_stockdata,
@@ -93,12 +111,24 @@ def get_predictions(
         LSTM_score_of_training,
         "LSTM"
     )
+
+    
+
+    fig_lstm2 = get_plot(
+        df_stockdata,
+        LSTM2_result_of_testing_to_visualize,
+        days_to_train,
+        LSTM2_result_of_predictions,
+        days_in_future_to_predict,
+        LSTM2_score_of_training,
+        "LSTM"
+    )
     return_status=""
     if Status_main !=None:
         return_status="main.py:"+Status_main+"\n"
-    return_status=return_status+"Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM:"+LSTM_status
+    return_status=return_status+"Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM1:"+LSTM_status +"\n"+"LSTM2:"+ LSTM2_status
     
-    return fig_all, fig_linear, fig_gradian, fig_lstm, return_status
+    return fig_all, fig_linear, fig_gradian, fig_lstm, fig_lstm2, return_status
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
     Status=None

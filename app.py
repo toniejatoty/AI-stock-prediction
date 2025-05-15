@@ -38,7 +38,7 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
         progress((epoch / total_epochs), desc=f"I am in {name}, Progress {epoch}/{total_epochs}, loss = {np.round(loss,5)}, val_loss = {np.round(val_loss,5)}")
 
     try:
-        fig_all, fig_linear, fig_gradian, fig_lstm, status = get_predictions(
+        fig_all, fig_linear, fig_gradian, fig_lstm,fig_lstm2, status = get_predictions(
             days_to_predict,
             ticker,
             start_date,
@@ -54,11 +54,11 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
             update_progress,
             lstm_layers
         )
-        return (status, fig_all, fig_linear,fig_gradian, fig_lstm)
+        return (status, fig_all, fig_linear,fig_gradian, fig_lstm, fig_lstm2)
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"Error: {str(e)}\nTraceback:\n{error_trace}")
-        return (f"Error: {str(e)}", None, None, None, None)
+        return (f"Error: {str(e)}", None, None, None, None, None)
 
 def stop_training():
     global should_stop
@@ -126,6 +126,7 @@ with demo:
     fig_linear_output = gr.Plot(label="Linear Regression Prediction")
     fig_gradian_output = gr.Plot(label="Gradian Boost Prediction")
     fig_lstm_output = gr.Plot(label="LSTM Prediction")
+    fig_lstm2_output = gr.Plot(label="LSTM 2 Prediction")
 
     def update_layer_visibility(num_layers):
         layer_updates = [gr.update(visible=(i < num_layers)) for i in range(MAX_LAYERS)]
@@ -144,7 +145,7 @@ with demo:
         n_estimators, learning_rate_gradian, max_depth, XGB_early_stopping,
         epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,LSTM_early_stopping, num_layers] +
        [comp for (_, *comps) in lstm_layers_ui for comp in comps],
-        outputs=[status_output, fig_historical_output, fig_linear_output,fig_gradian_output, fig_lstm_output]
+        outputs=[status_output, fig_historical_output, fig_linear_output,fig_gradian_output, fig_lstm_output, fig_lstm2_output]
     )
     
     stop_button.click(
