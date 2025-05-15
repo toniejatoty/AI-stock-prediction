@@ -5,7 +5,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 def predict_stock_prices(df_org, days_in_future_to_predict, loss_function):
     Status="OK"
     
-    #to test model   
+    #to test model 
+    print(days_in_future_to_predict)  
+    print(df_org)
     days_to_train_testing = get_best_num_of_days_to_train(df_org[0:-days_in_future_to_predict], days_in_future_to_predict,loss_function)
     
     result_of_testing=get_pred(df_org.iloc[0:-days_in_future_to_predict],days_to_train_testing,days_in_future_to_predict)
@@ -62,6 +64,8 @@ def get_best_num_of_days_to_train(df_org, days_in_future_to_predict,loss_functio
         score = get_score(x_train_pred, y_train, loss_function)
         days_in_past_to_train[days_to_train] = score
 
+    print(max_size_df)
+    print(days_in_future_to_predict)
     days_to_train = min(days_in_past_to_train, key=lambda k: days_in_past_to_train[k])
 
     return days_to_train

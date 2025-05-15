@@ -2,7 +2,7 @@ import get_data
 import model_LSTM2
 import model_LinearRegression
 import model_XGBRegressor
-import model_LSTM
+import model_LSTM1
 from visualization import get_plot, show_all_historical_data
 
 
@@ -48,7 +48,7 @@ def get_predictions(
     )
   
     LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training,LSTM_status= (
-        model_LSTM.predict_stock_prices(
+        model_LSTM1.predict_stock_prices(
             df_stockdata,
             days_in_future_to_predict,
             days_to_train,
@@ -132,11 +132,13 @@ def get_predictions(
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
     Status=None
+    print(days_to_train)
+    print(days_in_future_to_predict)
+    print(df_stockdata.shape[0])
     if 2*days_to_train + days_in_future_to_predict > df_stockdata.shape[0]:
         proc = int(0.4 * df_stockdata.shape[0])
-        days_to_train = proc
-        days_in_future_to_predict = df_stockdata.shape[0] - (2*proc)
-        days_to_train=days_to_train-1
+        days_to_train = max(1,proc)
+        days_in_future_to_predict = max(1,int(0.1 * df_stockdata.shape[0]))
         Status = f"You provided days to predict + 2*days to train > Start date, thus i set: days to train:{days_to_train}, days to predict:{days_in_future_to_predict}  "
         
     return days_to_train,days_in_future_to_predict, Status
