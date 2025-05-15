@@ -110,14 +110,6 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
     for i in range(future_days, 0, -1):
         y_test.append(df[-i,close_index] )
 
-    print("__________-------------____________")
-    print(days_to_train)
-    print(future_days)
-    print(len(df))
-    print(X_train)
-    print(X_test)
-    print(y_train)
-    print(y_test)
     X_train=np.array(X_train)
     y_train=np.array(y_train)
 

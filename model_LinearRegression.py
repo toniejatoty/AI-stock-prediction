@@ -9,7 +9,7 @@ def predict_stock_prices(df_org, days_in_future_to_predict, loss_function):
     days_to_train_testing = get_best_num_of_days_to_train(df_org[0:-days_in_future_to_predict], days_in_future_to_predict,loss_function)
     
     result_of_testing=get_pred(df_org.iloc[0:-days_in_future_to_predict],days_to_train_testing,days_in_future_to_predict)
-    score = get_score(result_of_testing, df_org['Close'].iloc[-2*days_in_future_to_predict:-days_in_future_to_predict], loss_function)
+    score = get_score(result_of_testing, df_org['Close'].iloc[-days_in_future_to_predict:], loss_function)
     
     days_to_train_pred = get_best_num_of_days_to_train(df_org, days_in_future_to_predict,loss_function)
     #to predict future
