@@ -26,6 +26,11 @@ def predict_stock_prices(
 
     X_train, X_test, y_train, y_test, X_pred = get_test_train_predict(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
 
+    print("LSTM2")
+    print(f"X_train={X_train}")
+    print(f"X_test={X_test}")
+    print(f"y_train={y_train}")
+    print(f"y_test={y_test}")
     model = get_model(X_train.shape[1], X_train.shape[2],optimizer_name, learning_rate,loss_function,lstm_layers)
 
     best_val_loss = float('inf')
@@ -62,10 +67,6 @@ def predict_stock_prices(
         current_val_loss=0
 
         result_of_testing = get_pred(model, X_test, days_to_train, df, days_in_future_to_predict)
-        print(result_of_testing.shape)
-        print(result_of_testing)
-        print(y_test.shape)
-        print(y_test)
         result_of_testing=result_of_testing.flatten()
         
         current_val_loss =get_score(result_of_testing, y_test, loss_function)
@@ -106,7 +107,7 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
         y_train.append(df[i, close_index])
 
     
-    X_test.append(df[len(df) - days_to_train - future_days+1: len(df)-future_days+1])
+    X_test.append(df[len(df) - days_to_train - future_days: len(df)-future_days])
     for i in range(future_days, 0, -1):
         y_test.append(df[-i,close_index] )
 

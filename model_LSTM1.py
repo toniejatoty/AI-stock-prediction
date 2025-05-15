@@ -1,3 +1,4 @@
+import math
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
@@ -25,6 +26,12 @@ def predict_stock_prices(
     scaled_data = scaler.fit_transform(df)
 
     X_train, X_test, y_train, y_test, X_pred = get_test_train_predict(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
+
+    print("LSTM1")
+    print(f"X_train={X_train}")
+    print(f"X_test={X_test}")
+    print(f"y_train={y_train}")
+    print(f"y_test={y_test}")
 
     model = get_model(X_train.shape[1], X_train.shape[2],optimizer_name, learning_rate,loss_function,days_in_future_to_predict,lstm_layers)
 
@@ -75,9 +82,7 @@ def predict_stock_prices(
 ############################# functions
 
 def get_test_train_predict(df, days_to_train,future_days,close_index):
-    proc=0.8
-    proc = (df.shape[0]-2*days_to_train-future_days) *proc
-    proc  = int(proc)
+
     X = []
     y = []
     for i in range(days_to_train, len(df)-future_days+1):
@@ -86,7 +91,10 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
 
     X=np.array(X)
     y=np.array(y)
-    index_between_train_test = proc+days_to_train
+    proc=0.8
+    index_between_train_test = len(X) *proc
+    index_between_train_test  = math.ceil(index_between_train_test)
+    #index_between_train_test = index_between_train_test+days_to_train
     X_train, X_test = X[:index_between_train_test], X[index_between_train_test:]
     y_train, y_test = y[:index_between_train_test], y[index_between_train_test:]
 
@@ -94,13 +102,15 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
     X_test = X_test.reshape((X_test.shape[0], days_to_train, df.shape[1]))
     y_train = y_train.reshape((y_train.shape[0], future_days, 1))
     y_test = y_test.reshape((y_test.shape[0], future_days, 1))
-    print("-----------___________---------")
-    print(X)
-    print(X_test)
 
     X_pred = [df[-days_to_train:]]
     X_pred=np.array(X_pred)
     X_pred = X_pred.reshape((X_pred.shape[0], days_to_train, df.shape[1]))
+
+    print("LSTM1")
+    print(f"index_between={index_between_train_test}")
+
+    print(f"lenX={len(X)}")
     return X_train, X_test, y_train, y_test, X_pred
 
 

@@ -47,6 +47,8 @@ def get_predictions(
             )
     )
   
+    print(f"df = {df_stockdata}")
+    print(df_stockdata.columns)
     LSTM_result_of_testing_to_visualize, LSTM_result_of_predictions, LSTM_score_of_training,LSTM_status= (
         model_LSTM1.predict_stock_prices(
             df_stockdata,

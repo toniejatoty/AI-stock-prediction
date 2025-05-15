@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -77,18 +78,31 @@ def get_split_data(df_org, days_to_train, days_in_future):
         X.append(df[required_cols].iloc[i - days_to_train:i].values.flatten())
         for j in range(1, days_in_future + 1):
             y[f'target_{j}'].append(df[f'target_{j}'].iloc[i-1])
-    proc=0.8
     
-    index_between_train_test = (df.shape[0]-2*days_to_train-days_in_future) *proc   
+    proc=0.8
+    index_train = ((len(X)-2)-days_to_train+1) *proc   
     X = np.array(X)
     y = {k: np.array(v) for k, v in y.items()}
 
-    index_between_train_test = int(index_between_train_test)
-    index_between_train_test = index_between_train_test+days_to_train
-    X_train, X_test = X[:index_between_train_test], X[index_between_train_test:]
-    y_train,y_test = {k: v[:index_between_train_test] for k, v in y.items()}, {k: v[index_between_train_test:] for k, v in y.items()}
+    index_train = math.ceil(index_train)
+    #index_between_train_test = min(index_between_train_test, len(X)-2)
+    index_test = index_train+days_to_train
+    index_train=index_train+1
+    X_train, X_test = X[:index_train], X[index_test:]
+    y_train,y_test = {k: v[:index_train] for k, v in y.items()}, {k: v[index_test:] for k, v in y.items()}
     
     future_X = df_org[required_cols].values[-days_to_train:].flatten().reshape(1, -1)
+    print("XGBR")
+    print(f"X={X}")
+    print(f"len(X)={len(X)}")
+    print(f"day_train={days_to_train}")
+    print(f"future_days={days_in_future}")
+    print(f"df.shape[0]={df.shape[0]}")
+    print(f"index={index_train}")
+    print(f"X_train={X_train}")
+    print(f"X_test={X_test}")
+    print(f"y_train={y_train}")
+    print(f"y_test={y_test}")
     return X_train, y_train, X_test, y_test, future_X
 
 def inverse_scaller(predictions, df, scaler):
