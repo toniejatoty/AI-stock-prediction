@@ -80,7 +80,7 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
     proc  = int(proc)
     X = []
     y = []
-    for i in range(days_to_train, len(df)-future_days):
+    for i in range(days_to_train, len(df)-future_days+1):
         X.append(df[i - days_to_train : i])
         y.append(df[i:i+future_days, close_index])
 
@@ -94,7 +94,10 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
     X_test = X_test.reshape((X_test.shape[0], days_to_train, df.shape[1]))
     y_train = y_train.reshape((y_train.shape[0], future_days, 1))
     y_test = y_test.reshape((y_test.shape[0], future_days, 1))
-    
+    print("-----------___________---------")
+    print(X)
+    print(X_test)
+
     X_pred = [df[-days_to_train:]]
     X_pred=np.array(X_pred)
     X_pred = X_pred.reshape((X_pred.shape[0], days_to_train, df.shape[1]))

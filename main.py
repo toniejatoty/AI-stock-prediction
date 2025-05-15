@@ -132,9 +132,8 @@ def get_predictions(
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
     Status=None
-    print(days_to_train)
-    print(days_in_future_to_predict)
-    print(df_stockdata.shape[0])
+    if df_stockdata.shape[0] <=2:
+        raise ValueError(f"Please give wider Start date")
     if 2*days_to_train + days_in_future_to_predict > df_stockdata.shape[0]:
         proc = int(0.4 * df_stockdata.shape[0])
         days_to_train = max(1,proc)

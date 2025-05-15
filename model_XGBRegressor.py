@@ -33,7 +33,7 @@ def predict_stock_prices(
             return None, None, None, Status
         model = XGBRegressor(**model_params)
 
-        model.fit(X_train, y_train[f'target_{day}'], eval_set=[(X_test, y_test[f'target_{day}'])])#, verbose=False
+        model.fit(X_train, y_train[f'target_{day}'], eval_set=[(X_test, y_test[f'target_{day}'])], verbose=False)
         pred = model.predict(X_test)
         test_preds.append(pred[-1])
         future_preds.append(model.predict(future_X))
@@ -69,23 +69,21 @@ def get_split_data(df_org, days_to_train, days_in_future):
         new_columns = {f'target_{i}': df['Close'].shift(-i)}
         df = df.assign(**new_columns)
     df.dropna(inplace=True)
-    
+
     X = []
     y = {f'target_{i}': [] for i in range(1, days_in_future + 1)}
 
-    for i in range(days_to_train, len(df)):
+    for i in range(days_to_train, df.shape[0]+1):
         X.append(df[required_cols].iloc[i - days_to_train:i].values.flatten())
         for j in range(1, days_in_future + 1):
-            y[f'target_{j}'].append(df[f'target_{j}'].iloc[i])
-
-
+            y[f'target_{j}'].append(df[f'target_{j}'].iloc[i-1])
     proc=0.8
     
-    index_between_train_test = (df.shape[0]-2*days_to_train-days_in_future) *proc
-    index_between_train_test  = int(index_between_train_test)
+    index_between_train_test = (df.shape[0]-2*days_to_train-days_in_future) *proc   
     X = np.array(X)
     y = {k: np.array(v) for k, v in y.items()}
 
+    index_between_train_test = int(index_between_train_test)
     index_between_train_test = index_between_train_test+days_to_train
     X_train, X_test = X[:index_between_train_test], X[index_between_train_test:]
     y_train,y_test = {k: v[:index_between_train_test] for k, v in y.items()}, {k: v[index_between_train_test:] for k, v in y.items()}

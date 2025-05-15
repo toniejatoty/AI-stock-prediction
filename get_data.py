@@ -33,8 +33,6 @@ def validade_params(symbol, start_date):
     business_days_diff = len(pd.bdate_range(start_date, today))
     if(business_days_diff <=0):
         raise ValueError(f"Please give past Start date")
-    if(business_days_diff <=10):
-        raise ValueError(f"Please give wider Start date")
     return max(start_date, available_start)
 
 
