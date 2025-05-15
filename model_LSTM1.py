@@ -91,12 +91,14 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
 
     X=np.array(X)
     y=np.array(y)
+
     proc=0.8
-    index_between_train_test = len(X) *proc
-    index_between_train_test  = math.ceil(index_between_train_test)
-    #index_between_train_test = index_between_train_test+days_to_train
-    X_train, X_test = X[:index_between_train_test], X[index_between_train_test:]
-    y_train, y_test = y[:index_between_train_test], y[index_between_train_test:]
+    index_train = ((len(X)-2)-days_to_train+1) *proc 
+    index_train = math.ceil(index_train)
+    index_test = index_train+days_to_train
+    index_train=index_train+1
+    X_train, X_test = X[:index_train], X[index_test:]
+    y_train, y_test = y[:index_train], y[index_test:]
 
     X_train = X_train.reshape((X_train.shape[0], days_to_train, df.shape[1]))
     X_test = X_test.reshape((X_test.shape[0], days_to_train, df.shape[1]))
@@ -108,7 +110,7 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
     X_pred = X_pred.reshape((X_pred.shape[0], days_to_train, df.shape[1]))
 
     print("LSTM1")
-    print(f"index_between={index_between_train_test}")
+    print(f"index_between={index_train}")
 
     print(f"lenX={len(X)}")
     return X_train, X_test, y_train, y_test, X_pred

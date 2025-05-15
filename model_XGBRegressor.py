@@ -85,7 +85,6 @@ def get_split_data(df_org, days_to_train, days_in_future):
     y = {k: np.array(v) for k, v in y.items()}
 
     index_train = math.ceil(index_train)
-    #index_between_train_test = min(index_between_train_test, len(X)-2)
     index_test = index_train+days_to_train
     index_train=index_train+1
     X_train, X_test = X[:index_train], X[index_test:]
