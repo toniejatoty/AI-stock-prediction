@@ -82,7 +82,7 @@ with demo:
     with gr.Row():
         n_estimators = gr.Slider(1, 1000, value=300, step=1, label="Number of estimators")
         learning_rate_xgb = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
-        max_depth = gr.Slider(1, 20,value=7, step=1, label="Max Depth")
+        max_depth = gr.Slider(1, 20,value=6, step=1, label="Max Depth")
         XGB_early_stopping=gr.Slider(1,500,value=100, label="Early stopping patience")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## LSTM")
