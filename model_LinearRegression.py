@@ -14,7 +14,7 @@ def predict_stock_prices(df_org, days_in_future_to_predict, loss_function):
     days_to_train_pred = get_best_num_of_days_to_train(df_org, days_in_future_to_predict,loss_function)
     #to predict future
     future_pred=get_pred(df_org,days_to_train_pred,days_in_future_to_predict)
-    print(days_to_train_testing)
+    Status = f"Number of days to train to get the best test result {days_to_train_testing}"
     return ( result_of_testing,future_pred,days_to_train_pred,score, Status )
 
 

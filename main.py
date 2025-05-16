@@ -11,7 +11,7 @@ def get_predictions(
     symbol,
     start_date,
     days_to_train,
-    Gradian_params,
+    XGB_params,
     epochs,
     loss_function,
     optimizer_name,
@@ -40,7 +40,7 @@ def get_predictions(
             df_stockdata,
             days_in_future_to_predict,
             days_to_train,
-            Gradian_params,
+            XGB_params,
             loss_function,
             stop_check,
             progress_callback
@@ -92,7 +92,7 @@ def get_predictions(
         "Linear Regression"
     )
 
-    fig_gradian = get_plot(
+    fig_xgb = get_plot(
         df_stockdata,
         XGBRegressor_result_of_testing_to_visualize,
         days_to_train,
@@ -128,7 +128,7 @@ def get_predictions(
         return_status="main.py:"+Status_main+"\n"
     return_status=return_status+"Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM1:"+LSTM_status +"\n"+"LSTM2:"+ LSTM2_status
     
-    return fig_all, fig_linear, fig_gradian, fig_lstm, fig_lstm2, return_status
+    return fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status
 
 def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
     Status=None
