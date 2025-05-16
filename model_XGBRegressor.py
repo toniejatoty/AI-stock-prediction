@@ -91,17 +91,17 @@ def get_split_data(df_org, days_to_train, days_in_future):
     y_train,y_test = {k: v[:index_train] for k, v in y.items()}, {k: v[index_test:] for k, v in y.items()}
     
     future_X = df_org[required_cols].values[-days_to_train:].flatten().reshape(1, -1)
-    print("XGBR")
-    print(f"X={X}")
-    print(f"len(X)={len(X)}")
-    print(f"day_train={days_to_train}")
-    print(f"future_days={days_in_future}")
-    print(f"df.shape[0]={df.shape[0]}")
-    print(f"index={index_train}")
-    print(f"X_train={X_train}")
-    print(f"X_test={X_test}")
-    print(f"y_train={y_train}")
-    print(f"y_test={y_test}")
+    # print("XGBR")
+    # print(f"X={X}")
+    # print(f"len(X)={len(X)}")
+    # print(f"day_train={days_to_train}")
+    # print(f"future_days={days_in_future}")
+    # print(f"df.shape[0]={df.shape[0]}")
+    # print(f"index={index_train}")
+    # print(f"X_train={X_train}")
+    # print(f"X_test={X_test}")
+    # print(f"y_train={y_train}")
+    # print(f"y_test={y_test}")
     return X_train, y_train, X_test, y_test, future_X
 
 def inverse_scaller(predictions, df, scaler):

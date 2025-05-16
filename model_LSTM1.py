@@ -25,13 +25,13 @@ def predict_stock_prices(
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(df)
 
-    X_train, X_test, y_train, y_test, X_pred = get_test_train_predict(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
+    X_train, X_test, y_train, y_test, X_pred = split_data(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
 
-    print("LSTM1")
-    print(f"X_train={X_train}")
-    print(f"X_test={X_test}")
-    print(f"y_train={y_train}")
-    print(f"y_test={y_test}")
+    # print("LSTM1")
+    # print(f"X_train={X_train}")
+    # print(f"X_test={X_test}")
+    # print(f"y_train={y_train}")
+    # print(f"y_test={y_test}")
 
     model = get_model(X_train.shape[1], X_train.shape[2],optimizer_name, learning_rate,loss_function,days_in_future_to_predict,lstm_layers)
 
@@ -81,7 +81,7 @@ def predict_stock_prices(
 
 ############################# functions
 
-def get_test_train_predict(df, days_to_train,future_days,close_index):
+def split_data(df, days_to_train,future_days,close_index):
 
     X = []
     y = []
@@ -109,10 +109,10 @@ def get_test_train_predict(df, days_to_train,future_days,close_index):
     X_pred=np.array(X_pred)
     X_pred = X_pred.reshape((X_pred.shape[0], days_to_train, df.shape[1]))
 
-    print("LSTM1")
-    print(f"index_between={index_train}")
+    # print("LSTM1")
+    # print(f"index_between={index_train}")
 
-    print(f"lenX={len(X)}")
+    # print(f"lenX={len(X)}")
     return X_train, X_test, y_train, y_test, X_pred
 
 

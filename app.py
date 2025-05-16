@@ -9,7 +9,7 @@ ACTIVATIONS = ['tanh', 'relu', 'sigmoid', 'linear']
 RECURRENT_ACTIVATIONS = ['sigmoid', 'hard_sigmoid', 'tanh']
 
 def run_model(ticker, days_to_predict, start_date, days_to_train,
-              n_estimators, learning_rate_gradian, max_depth, XGB_early_stopping,
+              n_estimators, learning_rate_xgb, max_depth, XGB_early_stopping,
               epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size, LSTM_early_stopping, num_layers, *LSTM_layers_info):
     global should_stop
     should_stop = False
@@ -17,9 +17,9 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
 
     lstm_layers = []
     params_per_layer = 5
-    gradian_params = {
+    XGB_params = {
         "n_estimators": n_estimators,
-        "learning_rate": learning_rate_gradian,
+        "learning_rate": learning_rate_xgb,
         "max_depth": max_depth,
         "early_stopping_rounds":XGB_early_stopping,
         "eval_metric": "rmse" if loss_function == "mse" else loss_function}
@@ -38,12 +38,12 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
         progress((epoch / total_epochs), desc=f"I am in {name}, Progress {epoch}/{total_epochs}, loss = {np.round(loss,5)}, val_loss = {np.round(val_loss,5)}")
 
     try:
-        fig_all, fig_linear, fig_gradian, fig_lstm,fig_lstm2, status = get_predictions(
+        fig_all, fig_linear, fig_xgb, fig_lstm,fig_lstm2, status = get_predictions(
             days_to_predict,
             ticker,
             start_date,
             days_to_train,
-            gradian_params,
+            XGB_params,
             epochs,
             loss_function,
             optimizer_name,
@@ -54,7 +54,7 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
             update_progress,
             lstm_layers
         )
-        return (status, fig_all, fig_linear,fig_gradian, fig_lstm, fig_lstm2)
+        return (status, fig_all, fig_linear,fig_xgb, fig_lstm, fig_lstm2)
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"Error: {str(e)}\nTraceback:\n{error_trace}")
@@ -73,15 +73,15 @@ with demo:
     gr.Markdown("## General Information")
     with gr.Row():
         ticker = gr.Textbox(label="Ticker", value="AAPL")
-        days_to_predict = gr.Slider(1, 365, value=20, label="Days to predict")
-        start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="2000-01-01")
-        days_to_train = gr.Slider(1, 1000, value=60, label="Days to train")
+        days_to_predict = gr.Slider(1, 365, value=5, label="Days to predict")
+        start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="2022-01-01")
+        days_to_train = gr.Slider(1, 1000, value=30, label="Days to train")
         loss_function = gr.Dropdown(choices=["mse", "mae"], label="Loss function", value="mse")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## XGBRegressor")
     with gr.Row():
         n_estimators = gr.Slider(1, 1000, value=300, step=1, label="Number of estimators")
-        learning_rate_gradian = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
+        learning_rate_xgb = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
         max_depth = gr.Slider(1, 20,value=7, step=1, label="Max Depth")
         XGB_early_stopping=gr.Slider(1,500,value=100, label="Early stopping patience")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
@@ -124,7 +124,7 @@ with demo:
     status_output = gr.Textbox(label="Status")
     fig_historical_output = gr.Plot(label="Historical Data")
     fig_linear_output = gr.Plot(label="Linear Regression Prediction")
-    fig_gradian_output = gr.Plot(label="Gradian Boost Prediction")
+    fig_xgb_output = gr.Plot(label="XGB Regression Prediction")
     fig_lstm_output = gr.Plot(label="LSTM Prediction")
     fig_lstm2_output = gr.Plot(label="LSTM 2 Prediction")
 
@@ -142,10 +142,10 @@ with demo:
     start_button.click(
         fn=run_model,
         inputs=[ticker, days_to_predict, start_date, days_to_train,
-        n_estimators, learning_rate_gradian, max_depth, XGB_early_stopping,
+        n_estimators, learning_rate_xgb, max_depth, XGB_early_stopping,
         epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,LSTM_early_stopping, num_layers] +
        [comp for (_, *comps) in lstm_layers_ui for comp in comps],
-        outputs=[status_output, fig_historical_output, fig_linear_output,fig_gradian_output, fig_lstm_output, fig_lstm2_output]
+        outputs=[status_output, fig_historical_output, fig_linear_output,fig_xgb_output, fig_lstm_output, fig_lstm2_output]
     )
     
     stop_button.click(
