@@ -56,3 +56,6 @@ Example graph of LSTM v2 implementation
 
 All the parameters that user can give
 ![alt text](image-2.png)
+## 📂 Documentation
+
+[📄 Full documentation in Polish](projekt_indywidualny.pdf)
