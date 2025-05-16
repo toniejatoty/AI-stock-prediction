@@ -50,3 +50,9 @@ It split data that train=80%, test=20%. To get more than 1 prediction it uses th
 ## LSTM v1 and v2
 The are 2 implementation of LSTM. The first is trained to in one prediction give all the days. The second is trained to give one day predicted. To get more days this predicted day is throwing away the oldest record and this predicted is becomes the latest. In first implementation train=80%, test=20%, in second test=1 record, train=rest of records. Parameters provided by user in GUI in LSTM section are for both of implementation
 
+## 🖥️ System Demonstration
+Example graph of LSTM v2 implementation
+![alt text](image-1.png)
+
+All the parameters that user can give
+![alt text](image-2.png)
