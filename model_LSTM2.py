@@ -1,3 +1,4 @@
+import math
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
@@ -22,9 +23,18 @@ def predict_stock_prices(
     Status="OK"
     df = df_org.copy()
     scaler = MinMaxScaler(feature_range=(0, 1))
+  #  df= df[['Close']]
     scaled_data = scaler.fit_transform(df)
 
     X_train, X_test, y_train, y_test, X_pred = split_data(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
+   
+    # X, y = create_sequences(scaled_data, days_to_train, df_org.columns.get_loc("Close"))
+
+    # X_train, X_test = X[:-days_in_future_to_predict], X[days_in_future_to_predict:]
+    # y_train, y_test = y[:-days_in_future_to_predict], y[days_in_future_to_predict:]
+
+    # X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df_org.shape[1]))
+    # X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df_org.shape[1]))
 
     # print("LSTM2")
     # print(f"X_train={X_train}")
@@ -44,33 +54,16 @@ def predict_stock_prices(
             if epoch == 0:
                 return None, None,None, Status
             break
-        progress_callback("I am in LSTM2",epoch, epochs,loss, current_val_loss)
+        progress_callback("LSTM2",epoch, epochs,loss, current_val_loss)
         train_effect=model.fit(
             X_train,
             y_train,
             epochs=1,
             batch_size=batch_size,
+            validation_data=(X_test, y_test),
         )
         loss=train_effect.history['loss'][0]
-        # tmp_X_test = X_test.copy()
-        # div=0
-        # for i in range(0, X_test.shape[0]):
-        #     for j in range(i, i+days_in_future_to_predict):
-        #         pred = model.predict(tmp_X_test[j].reshape(1, days_to_train, df.shape[1]))
-        #         current_val_loss = current_val_loss + get_score(inverse_scaller(pred,df,scaler), y_test[j], loss_function, scaler,df)
-        #         tmp_X_test[j] =np.roll(tmp_X_test[j], -1, axis=0)
-        #         tmp_X_test[j][-1] = pred
-        #         div = div+1
-        # current_val_loss = current_val_loss / div
-        tmp_X_test = X_test.copy()
-        tmp_X_test.reshape(1,days_to_train, df.shape[1])
-        current_val_loss=0
-
-        result_of_testing = get_pred(model, X_test, days_to_train, df, days_in_future_to_predict)
-        result_of_testing=result_of_testing.flatten()
-        
-        current_val_loss =get_score(result_of_testing, y_test, loss_function)
-
+        current_val_loss = train_effect.history['val_loss'][0]
         if current_val_loss < best_val_loss:
             best_val_loss = current_val_loss
             no_improvement = 0
@@ -83,11 +76,11 @@ def predict_stock_prices(
             model.load_weights('saved_weights/best_model.weights.h5')
             break
 
-    test_predictions = get_pred(model, X_test, days_to_train, df, days_in_future_to_predict)
+    test_predictions = get_pred(model, X_test[-days_in_future_to_predict], days_to_train, df_org, days_in_future_to_predict)
     test_predictions = inverse_scaller(test_predictions, df, scaler)
 
 
-    future_predictions = get_pred(model, X_pred, days_to_train, df, days_in_future_to_predict)
+    future_predictions = get_pred(model, X_pred, days_to_train, df_org, days_in_future_to_predict)
     future_predictions=inverse_scaller(future_predictions, df, scaler)
 
     real = inverse_scaller(y_test[-days_in_future_to_predict:], df_org, scaler)
@@ -98,41 +91,42 @@ def predict_stock_prices(
 ############################# functions
 
 def split_data(df, days_to_train,future_days,close_index):
-    X_train = []
-    y_train = []
-    X_test = []
-    y_test = []
-    for i in range(days_to_train, len(df)-future_days-days_to_train+1):
-        X_train.append(df[i - days_to_train : i])
-        y_train.append(df[i, close_index])
 
-    
-    X_test.append(df[len(df) - days_to_train - future_days: len(df)-future_days])
-    for i in range(future_days, 0, -1):
-        y_test.append(df[-i,close_index] )
+    X = []
+    y = []
+    for i in range(days_to_train, len(df)):
+        X.append(df[i - days_to_train : i])
+        y.append(df[i, close_index])
 
-    X_train=np.array(X_train)
-    y_train=np.array(y_train)
+    X=np.array(X)
+    y=np.array(y)
 
-    X_test=np.array(X_test)
-    y_test=np.array(y_test)
-
+    proc=0.8
+    index_train = ((len(X)-2)-days_to_train+1) *proc 
+    index_train = math.ceil(index_train)
+    index_test = index_train+days_to_train
+    index_train=index_train+1
+    #index_train = len(X)
+    print(index_test)
+    print(index_train)
+    X_train, X_test = X[:index_train], X[index_test:]
+    y_train, y_test = y[:index_train], y[index_test:]
 
     X_train = X_train.reshape((X_train.shape[0], days_to_train, df.shape[1]))
     X_test = X_test.reshape((X_test.shape[0], days_to_train, df.shape[1]))
-    y_train = y_train.reshape((y_train.shape[0], 1, 1))
-    y_test = y_test.reshape((y_test.shape[0], 1))
-    
-    X_pred = [df[-days_to_train:]]
-    X_pred=np.array(X_pred)
-    X_pred = X_pred.reshape((X_pred.shape[0], days_to_train, df.shape[1]))
- 
+    # y_train = y_train.reshape((y_train.shape[0], 1, 1))
+    # y_test = y_test.reshape((y_test.shape[0], 1, 1))
 
+    # X_pred = [df[-days_to_train:]]
+    # X_pred=np.array(X_pred)
+    
+    X_pred = df[-days_to_train:].reshape(days_to_train, df.shape[1])
+    X_pred = np.array(X_pred)
     return X_train, X_test, y_train, y_test, X_pred
 
 
 
-def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function ,lstm_layers):
+def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_function,lstm_layers):
     model = Sequential()
     
     for i, layer_config in enumerate(lstm_layers):
@@ -153,10 +147,7 @@ def get_model(input_shape1, input_shape2, optimizer_name, learning_rate, loss_fu
                 recurrent_activation=layer_config['recurrent_activation'],
                 recurrent_dropout=layer_config['recurrent_dropout']
             ))
-        
-        if i < len(lstm_layers) - 1:
-            model.add(Dropout(layer_config['dropout']))
-    
+           
     model.add(Dense(units=1))
     opt = get_optimizer(optimizer_name, learning_rate)
     model.compile(optimizer=opt, loss=loss_function)
@@ -189,11 +180,22 @@ def get_score(predicted, real, loss_function):
         score = mean_absolute_error(predicted, real)
     return score
     
-def get_pred(model, X_pred, days_to_train, df, days_in_future ):
+def get_pred(model, X_pred_org, days_to_train, df, days_in_future ):
+    X_pred = X_pred_org.copy()
     result = []
     for i in range(0,days_in_future):
         pred = model.predict(X_pred.reshape(1, days_to_train, df.shape[1]))
         X_pred =np.roll(X_pred, -1, axis=0)
-        X_pred[-1] = pred
-        result.append(pred)
+        X_pred[-1,df.columns.get_loc("Close")] = pred[0,0]
+        result.append(pred[0,0])
     return np.array(result)
+
+
+
+def create_sequences(df, days_to_train, close_index):
+    X = []
+    y = []
+    for i in range(days_to_train, len(df)):
+        X.append(df[i - days_to_train : i])
+        y.append(df[i, close_index])
+    return np.array(X), np.array(y)

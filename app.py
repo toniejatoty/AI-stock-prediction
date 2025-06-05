@@ -72,10 +72,10 @@ with demo:
 
     gr.Markdown("## General Information")
     with gr.Row():
-        ticker = gr.Textbox(label="Ticker", value="AAPL")
-        days_to_predict = gr.Slider(1, 365, value=5, label="Days to predict")
-        start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="2022-01-01")
-        days_to_train = gr.Slider(1, 1000, value=30, label="Days to train")
+        ticker = gr.Textbox(label="Ticker", value="INTC")
+        days_to_predict = gr.Slider(1, 365, value=30, label="Days to predict")
+        start_date = gr.Textbox(label="Start date (YYYY-MM-DD)", value="1900-01-01")
+        days_to_train = gr.Slider(1, 1000, value=60, label="Days to train")
         loss_function = gr.Dropdown(choices=["mse", "mae"], label="Loss function", value="mse")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
     gr.Markdown("## XGBRegressor")
