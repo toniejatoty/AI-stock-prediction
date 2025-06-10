@@ -8,15 +8,15 @@ MAX_LAYERS = 5
 ACTIVATIONS = ['tanh', 'relu', 'sigmoid', 'linear']
 RECURRENT_ACTIVATIONS = ['sigmoid', 'hard_sigmoid', 'tanh']
 
-def run_model(ticker, days_to_predict, start_date, days_to_train,
+def run_model(LINEAR_check, XGB_check, LSTM1_check, LSTM2_check, ticker, days_to_predict, start_date, days_to_train,
               n_estimators, learning_rate_xgb, max_depth, XGB_early_stopping,
               epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size, LSTM_early_stopping, num_layers, *LSTM_layers_info):
     global should_stop
     should_stop = False
     progress = gr.Progress()
-
     lstm_layers = []
     params_per_layer = 5
+    charts = np.array([LINEAR_check, XGB_check, LSTM1_check, LSTM2_check])
     XGB_params = {
         "n_estimators": n_estimators,
         "learning_rate": learning_rate_xgb,
@@ -39,6 +39,7 @@ def run_model(ticker, days_to_predict, start_date, days_to_train,
 
     try:
         fig_all, fig_linear, fig_xgb, fig_lstm,fig_lstm2, status = get_predictions(
+            charts,
             days_to_predict,
             ticker,
             start_date,
@@ -68,8 +69,15 @@ def stop_training():
 demo = gr.Blocks()
 
 with demo:
-    gr.Markdown("# 📈 Stock Price Predictor (Linear + XGBRegressor +  LSTM)")
-
+    with gr.Row( ):
+        with gr.Column(scale=2):
+            gr.Markdown("# 📈 Stock Price Predictor (Linear + XGBRegressor +  LSTM)")
+        with gr.Column(scale=1):
+            LINEAR_check = gr.Checkbox(value=True,label='Linear',interactive=True)
+            XGB_check = gr.Checkbox(value=True,label='XGBRegression',interactive=True)
+        with gr.Column(scale=1):
+            LSTM1_check = gr.Checkbox(value=True,label='LSTM1',interactive=True)
+            LSTM2_check = gr.Checkbox(value=True,label='LSTM2',interactive=True)
     gr.Markdown("## General Information")
     with gr.Row():
         ticker = gr.Textbox(label="Ticker", value="INTC")
@@ -110,8 +118,7 @@ with demo:
                 activation = gr.Dropdown(ACTIVATIONS, value='tanh', label="Activation")
                 recurrent_activation = gr.Dropdown(RECURRENT_ACTIVATIONS, value='sigmoid', label="Recurrent Activation")
 
-                lstm_layers_ui.append((layer_row, units, dropout, recurrent_dropout, 
-                                     activation, recurrent_activation))
+                lstm_layers_ui.append((layer_row, units, dropout, recurrent_dropout, activation, recurrent_activation))
             if i < MAX_LAYERS - 1:
                 separator = gr.HTML("<hr style='margin: 15px 0; border-top: 2px solid #ccc'>", 
                                   visible=(i < 1))
@@ -138,16 +145,15 @@ with demo:
         inputs=num_layers,
         outputs=[row for row, *_ in lstm_layers_ui] + separators
     )
-
     start_button.click(
         fn=run_model,
-        inputs=[ticker, days_to_predict, start_date, days_to_train,
+        inputs=[LINEAR_check, XGB_check, LSTM1_check, LSTM2_check, ticker, days_to_predict, start_date, days_to_train,
         n_estimators, learning_rate_xgb, max_depth, XGB_early_stopping,
-        epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,LSTM_early_stopping, num_layers] +
-       [comp for (_, *comps) in lstm_layers_ui for comp in comps],
+        epochs, loss_function, optimizer_name, learning_rate_lstm, batch_size,LSTM_early_stopping, num_layers]+
+       [comp for (_, *comps) in lstm_layers_ui for comp in comps], 
         outputs=[status_output, fig_historical_output, fig_linear_output,fig_xgb_output, fig_lstm_output, fig_lstm2_output]
     )
-    
+
     stop_button.click(
         fn=stop_training,
         inputs=[],
