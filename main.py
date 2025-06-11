@@ -137,7 +137,7 @@ def get_predictions(
     if Status_main !=None:
         return_status="main.py:"+Status_main+"\n"
     
-    return_status+"Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM1:"+LSTM_status +"\n"+"LSTM2:"+ LSTM2_status
+    return_status = return_status+"Linear:"+LINEAR_status+"\n"+"XGBRegressor:"+XGBRegressor_status+"\n"+"LSTM1:"+LSTM_status +"\n"+"LSTM2:"+ LSTM2_status
     
     return fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status
 

@@ -55,6 +55,7 @@ def run_model(LINEAR_check, XGB_check, LSTM1_check, LSTM2_check, ticker, days_to
             update_progress,
             lstm_layers
         )
+        print(f"status = {status}")
         return (status, fig_all, fig_linear,fig_xgb, fig_lstm, fig_lstm2)
     except Exception as e:
         error_trace = traceback.format_exc()
