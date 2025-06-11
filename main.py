@@ -50,7 +50,7 @@ def get_predictions(
             LINEAR_result_of_predictions,
             days_in_future_to_predict,
             LINEAR_score_of_training,
-            "Linear Regression"
+            f"{symbol} Linear Regression"
         )
 
 
@@ -73,7 +73,7 @@ def get_predictions(
             XGBRegressor_result_of_predictions,
             days_in_future_to_predict,
             XGBRegressor_score_of_training,
-            "XGBRegression"
+            f"{symbol} XGBRegression"
         )
 
     if charts[2] == True:
@@ -100,7 +100,7 @@ def get_predictions(
             LSTM_result_of_predictions,
             days_in_future_to_predict,
             LSTM_score_of_training,
-            "LSTM"
+            f"{symbol} LSTM"
         )
     if charts[3] == True:
         LSTM2_result_of_testing_to_visualize, LSTM2_result_of_predictions, LSTM2_score_of_training,LSTM2_status= (
@@ -126,7 +126,7 @@ def get_predictions(
             LSTM2_result_of_predictions,
             days_in_future_to_predict,
             LSTM2_score_of_training,
-            "LSTM"
+            f"{symbol} LSTM2"
         )
 
     fig_all = show_all_historical_data(df_stockdata)
