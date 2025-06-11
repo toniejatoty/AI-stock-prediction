@@ -25,6 +25,7 @@ def get_predictions(
 ):
     try:
         df_stockdata = get_data.get_stock_data(symbol, start_date)
+        df_stock_history = get_data.get_history_prices(symbol)
     except Exception as e:
         raise ValueError(f"{e}")
     
@@ -129,7 +130,7 @@ def get_predictions(
             f"{symbol} LSTM2"
         )
 
-    fig_all = show_all_historical_data(df_stockdata)
+    fig_all = show_all_historical_data(df_stock_history)
 
 
     return_status=""

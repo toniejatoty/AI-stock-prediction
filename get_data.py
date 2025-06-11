@@ -36,9 +36,12 @@ def validade_params(symbol, start_date):
     return max(start_date, available_start)
 
 
-def get_history_prices(symbol, start_date):
+def get_history_prices(symbol, start_date=None):
     company = yf.Ticker(symbol)
-    history_prices = company.history(start=start_date)
+    if start_date ==None:
+        history_prices = company.history(period="max")
+    else:
+        history_prices = company.history(start=start_date)
     return history_prices
 
 def get_income_statement(symbol):
