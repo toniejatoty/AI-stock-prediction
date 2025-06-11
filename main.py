@@ -130,7 +130,7 @@ def get_predictions(
             f"{symbol} LSTM2"
         )
 
-    fig_all = show_all_historical_data(df_stock_history)
+    fig_all = show_all_historical_data(df_stock_history, symbol)
 
 
     return_status=""

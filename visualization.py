@@ -44,10 +44,10 @@ def get_plot(
     return fig
 
 
-def show_all_historical_data(df):
+def show_all_historical_data(df, symbol):
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(df.index, df["Close"], label="Real Price")
-    ax.set_title(f"Historic stock price ({df.index[0].date()} - {df.index[-1].date()})")
+    ax.set_title(f"{symbol} Historic stock price ({df.index[0].date()} - {df.index[-1].date()})")
     ax.set_xlabel("Date")
     ax.set_ylabel("Stock price")
 
