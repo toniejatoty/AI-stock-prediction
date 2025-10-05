@@ -55,7 +55,6 @@ def run_model(LINEAR_check, XGB_check, LSTM1_check, LSTM2_check, ticker, days_to
             update_progress,
             lstm_layers
         )
-        print(f"status = {status}")
         return (status, fig_all, fig_linear,fig_xgb, fig_lstm, fig_lstm2)
     except Exception as e:
         error_trace = traceback.format_exc()
@@ -67,10 +66,12 @@ def stop_training():
     should_stop = True
     return "Stopping training..."
 
+
+
 demo = gr.Blocks()
 
 with demo:
-    with gr.Row( ):
+    with gr.Row():
         with gr.Column(scale=2):
             gr.Markdown("# 📈 Stock Price Predictor (Linear + XGBRegressor +  LSTM)")
         with gr.Column(scale=1):
@@ -79,7 +80,8 @@ with demo:
         with gr.Column(scale=1):
             LSTM1_check = gr.Checkbox(value=True,label='LSTM1',interactive=True)
             LSTM2_check = gr.Checkbox(value=True,label='LSTM2',interactive=True)
-    gr.Markdown("## General Information")
+    gr.Markdown("<h2 style='text-align:center; font-size:2.2em; margin-top:40px'>General Information</h2>")
+    
     with gr.Row():
         ticker = gr.Textbox(label="Ticker", value="INTC")
         days_to_predict = gr.Slider(1, 365, value=30, label="Days to predict")
@@ -87,21 +89,23 @@ with demo:
         days_to_train = gr.Slider(1, 1000, value=60, label="Days to train")
         loss_function = gr.Dropdown(choices=["mse", "mae"], label="Loss function", value="mse")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
-    gr.Markdown("## XGBRegressor")
+    
+    gr.Markdown("<h2 style='text-align:center; font-size:2.2em; margin-top:40px'>XGBRegressor</h2>")
     with gr.Row():
         n_estimators = gr.Slider(1, 1000, value=300, step=1, label="Number of estimators")
         learning_rate_xgb = gr.Slider(0.0001, 0.5, value=0.05, step=0.0001, label="Learning rate")
         max_depth = gr.Slider(1, 20,value=6, step=1, label="Max Depth")
         XGB_early_stopping=gr.Slider(1,500,value=100, label="Early stopping patience")
     gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;' />")
-    gr.Markdown("## LSTM")
+    
+    gr.Markdown("<h2 style='text-align:center; font-size:2.2em; margin-top:40px'>LSTM</h2>")
     with gr.Row():
         epochs = gr.Slider(1, 500, value=100, label="Epochs")
         optimizer_name = gr.Dropdown(choices=["adam", "sgd", "rmsprop"], label="Optimizer", value="adam")
         learning_rate_lstm = gr.Slider(0.0001, 0.1, value=0.001, step=0.0001, label="Learning rate")
         batch_size = gr.Slider(8, 512, step=8, value=32, label="Batch Size")
         LSTM_early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
-    num_of_layers_def=2    
+    num_of_layers_def=3    
     with gr.Row():
         num_layers = gr.Slider(1, MAX_LAYERS, value=num_of_layers_def, step=1, label="Number of LSTM Layers")
         update_layers_btn = gr.Button("Update number of Layers")

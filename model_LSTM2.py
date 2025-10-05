@@ -28,19 +28,6 @@ def predict_stock_prices(
 
     X_train, X_test, y_train, y_test, X_pred = split_data(scaled_data, days_to_train, days_in_future_to_predict,df.columns.get_loc("Close"))
    
-    # X, y = create_sequences(scaled_data, days_to_train, df_org.columns.get_loc("Close"))
-
-    # X_train, X_test = X[:-days_in_future_to_predict], X[days_in_future_to_predict:]
-    # y_train, y_test = y[:-days_in_future_to_predict], y[days_in_future_to_predict:]
-
-    # X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], df_org.shape[1]))
-    # X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], df_org.shape[1]))
-
-    # print("LSTM2")
-    # print(f"X_train={X_train}")
-    # print(f"X_test={X_test}")
-    # print(f"y_train={y_train}")
-    # print(f"y_test={y_test}")
     model = get_model(X_train.shape[1], X_train.shape[2],optimizer_name, learning_rate,loss_function,lstm_layers)
 
     best_val_loss = float('inf')
@@ -192,10 +179,3 @@ def get_pred(model, X_pred_org, days_to_train, df, days_in_future ):
 
 
 
-def create_sequences(df, days_to_train, close_index):
-    X = []
-    y = []
-    for i in range(days_to_train, len(df)):
-        X.append(df[i - days_to_train : i])
-        y.append(df[i, close_index])
-    return np.array(X), np.array(y)
