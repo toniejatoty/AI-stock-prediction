@@ -52,13 +52,13 @@ The are 2 implementation of LSTM. The first is trained to in one prediction give
 
 ## 🖥️ System Demonstration
 Example graph of GXBRegression implementation
-![alt text](image-1.png)
+![alt text](images/image-1.png)
 
 Example graph of LSTM v2 implementation
-![alt text](image-2.png)
+![alt text](images/image-2.png)
 
 All the parameters that user can give
-![alt text](image-3.png)
+![alt text](images/image-3.png)
 ## 📂 Documentation
 
 [📄 Full documentation in Polish](projekt_indywidualny.pdf)
