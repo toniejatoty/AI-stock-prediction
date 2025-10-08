@@ -22,7 +22,7 @@ def run_model(LINEAR_check, XGB_check, LSTM1_check, LSTM2_check, ticker, days_to
         "learning_rate": learning_rate_xgb,
         "max_depth": max_depth,
         "early_stopping_rounds":XGB_early_stopping,
-        "eval_metric": "rmse" if loss_function == "mse" else loss_function}
+        "eval_metric": "rmse" if loss_function == "mse" else loss_function} # xgb only supports "rmse" for regression tasks
     for i in range(0, num_layers * params_per_layer, params_per_layer):
         layer_params = LSTM_layers_info[i:i+params_per_layer]
         lstm_layers.append({
@@ -105,7 +105,7 @@ with demo:
         learning_rate_lstm = gr.Slider(0.0001, 0.1, value=0.001, step=0.0001, label="Learning rate")
         batch_size = gr.Slider(8, 512, step=8, value=32, label="Batch Size")
         LSTM_early_stopping=gr.Slider(1,500,value=10, label="Early stopping patience")
-    num_of_layers_def=3    
+    num_of_layers_def=2    
     with gr.Row():
         num_layers = gr.Slider(1, MAX_LAYERS, value=num_of_layers_def, step=1, label="Number of LSTM Layers")
         update_layers_btn = gr.Button("Update number of Layers")
@@ -126,12 +126,13 @@ with demo:
                 lstm_layers_ui.append((layer_row, units, dropout, recurrent_dropout, activation, recurrent_activation))
             if i < MAX_LAYERS - 1:
                 separator = gr.HTML("<hr style='margin: 15px 0; border-top: 2px solid #ccc'>", 
-                                  visible=(i < 1))
+                                  visible=(i < num_of_layers_def - 1))
                 separators.append(separator)
     
     with gr.Row():
         start_button = gr.Button("Predict", variant="primary")
         stop_button = gr.Button("Stop Training", variant="stop")
+    gr.Markdown("<hr style='border: 1px solid #ddd; width: 100%;margin-top:40px' />")
 
     status_output = gr.Textbox(label="Status")
     fig_historical_output = gr.Plot(label="Historical Data")

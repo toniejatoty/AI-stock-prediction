@@ -6,20 +6,31 @@ from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 def predict_stock_prices(
-    df_org,
-    days_in_future,
-    days_to_train,
-    model_params,
-    loss_function,
-    stop_check,
-    progress_callback
-):
+df_org,
+days_in_future,
+days_to_train,
+model_params,
+loss_function,
+stop_check,
+progress_callback):
+
     Status="OK"
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(df_org)
-    df_scaled = pd.DataFrame(scaled_data, columns=df_org.columns)
-    X_train, y_train, X_test, y_test, future_X = get_split_data(df_scaled, days_to_train, days_in_future)
-    
+    X_train, y_train, X_test, y_test, future_X = get_split_data(df_org, days_to_train, days_in_future)
+    X_scaler = MinMaxScaler(feature_range=(0, 1))
+    y_scaler = MinMaxScaler(feature_range=(0, 1))
+
+    X_train = X_scaler.fit_transform(X_train)
+    X_test = X_scaler.transform(X_test)
+    y_train_all_values = set()
+    for i in range(1, days_in_future + 1):
+        for j in range(0, y_train[f'target_{i}'].shape[0]):
+            y_train_all_values.add(y_train[f'target_{i}'][j])
+    y_scaler.fit(np.array(list(y_train_all_values)).reshape(-1, 1))
+    for i in range(1, days_in_future + 1):
+        y_train[f'target_{i}'] = y_scaler.transform(y_train[f'target_{i}'].reshape(-1, 1))
+        y_test[f'target_{i}'] = y_scaler.transform(y_test[f'target_{i}'].reshape(-1, 1))
+
+
     #train and predict 
     models = {}
     test_preds = []
@@ -49,10 +60,10 @@ def predict_stock_prices(
         current_val_loss = current_val_loss / X_test.shape[0]
     test_preds = np.array(test_preds).reshape(-1,1)
     real_vals=np.array([y_test[f"target_{day}"][-1] for day in range(1,days_in_future+1)]).reshape(1,-1).flatten()
-    test_preds=inverse_scaller(test_preds, df_org, scaler)
-    real_vals=inverse_scaller(real_vals, df_org, scaler)
+    test_preds=inverse_scaller(test_preds, df_org, y_scaler)
+    real_vals=inverse_scaller(real_vals, df_org, y_scaler)
     score = get_score(test_preds,real_vals, loss_function)
-    return test_preds, inverse_scaller(np.array(future_preds), df_org, scaler), score,Status
+    return test_preds, inverse_scaller(np.array(future_preds), df_org, y_scaler), score,Status
 
 
 def get_score(predicted, real, loss_function):
@@ -63,7 +74,7 @@ def get_score(predicted, real, loss_function):
     return score
 
 
-def get_split_data(df_org, days_to_train, days_in_future):
+def get_split_data(df_org, days_to_train, days_in_future, proc=0.8):
     df = df_org.copy()
     required_cols = df.columns
     for i in range(1, days_in_future + 1):
@@ -74,23 +85,24 @@ def get_split_data(df_org, days_to_train, days_in_future):
     X = []
     y = {f'target_{i}': [] for i in range(1, days_in_future + 1)}
 
+
     for i in range(days_to_train, df.shape[0]+1):
         X.append(df[required_cols].iloc[i - days_to_train:i].values.flatten())
         for j in range(1, days_in_future + 1):
             y[f'target_{j}'].append(df[f'target_{j}'].iloc[i-1])
-    
-    proc=0.8
-    index_train = ((len(X)-2)-days_to_train+1) *proc   
+
     X = np.array(X)
     y = {k: np.array(v) for k, v in y.items()}
 
-    index_train = math.ceil(index_train)
-    index_test = index_train+days_to_train
-    index_train=index_train+1
+    index_train = (len(X) - days_to_train) * proc
+    index_train = math.floor(index_train)
+    index_test = index_train + days_to_train - 1
     X_train, X_test = X[:index_train], X[index_test:]
     y_train,y_test = {k: v[:index_train] for k, v in y.items()}, {k: v[index_test:] for k, v in y.items()}
     
     future_X = df_org[required_cols].values[-days_to_train:].flatten().reshape(1, -1)
+
+
     # print("XGBR")
     # print(f"X={X}")
     # print(f"len(X)={len(X)}")

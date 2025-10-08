@@ -9,9 +9,7 @@ def get_stock_data(symbol, start_date):
         df_stock_full_info = history_prices
     else:
         df_stock_full_info_with_nan = merge(history_prices, income_statement)
-        df_stock_full_info = delete_useless_col_in_dataframe(
-            df_stock_full_info_with_nan
-        )
+        df_stock_full_info = delete_useless_col_in_dataframe(df_stock_full_info_with_nan)
     df_stock_full_info = drop_columns_with_only_nan_and_much_zeros(df_stock_full_info)
     #df_stock_full_info = df_stock_full_info.iloc[:-60]
     return df_stock_full_info

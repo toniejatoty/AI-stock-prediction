@@ -28,7 +28,6 @@ def get_predictions(
         df_stock_history = get_data.get_history_prices(symbol)
     except Exception as e:
         raise ValueError(f"{e}")
-    
     days_to_train,days_in_future_to_predict, Status_main = validate_params(days_to_train,df_stockdata,days_in_future_to_predict)
     
     LINEAR_status=""
@@ -103,6 +102,7 @@ def get_predictions(
             LSTM_score_of_training,
             f"{symbol} LSTM"
         )
+
     if charts[3] == True:
         LSTM2_result_of_testing_to_visualize, LSTM2_result_of_predictions, LSTM2_score_of_training,LSTM2_status= (
             model_LSTM2.predict_stock_prices(
@@ -152,3 +152,28 @@ def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
         Status = f"You provided days to predict + 2*days to train > Start date, thus i set: days to train:{days_to_train}, days to predict:{days_in_future_to_predict}  "
         
     return days_to_train,days_in_future_to_predict, Status
+
+
+
+############## to test without gradio ##############
+# if __name__ == "__main__":
+#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
+#         [False, True, False, False],
+#         30,
+#         "AAPL",
+#         "1900-01-01",
+#         60,
+#         {'n_estimators': 1, 'learning_rate': 0.05, 'max_depth': 6, 'early_stopping_rounds': 1, 'eval_metric': 'rmse'},
+#         1,
+#         "mse",
+#         "adam",
+#         0.001,
+#         32,
+#         1,
+#         lambda: False,
+#         lambda name, epoch, total_epochs, loss, val_loss: print(f"{name} {epoch}/{total_epochs} loss={loss} val_loss={val_loss}"),
+#         [{'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'},
+#         {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'}]
+#     )
+# print(return_status)#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
+# ##############################################################################
