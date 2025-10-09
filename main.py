@@ -55,7 +55,7 @@ def get_predictions(
 
 
     if charts[1] == True:
-        XGBRegressor_result_of_testing_to_visualize, XGBRegressor_result_of_predictions, XGBRegressor_score_of_training,XGBRegressor_status= (
+        XGBRegressor_result_of_testing_to_visualize, XGBRegressor_result_of_predictions, XGBRegressor_score_of_training,XGBRegressor_status, XGB_train_loss, XGB_test_loss, XGB_last_record_train_score= (
             model_XGBRegressor.predict_stock_prices(
                 df_stockdata,
                 days_in_future_to_predict,
@@ -155,25 +155,25 @@ def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
 
 
 
-# ############ to test without gradio ##############
-# if __name__ == "__main__":
-#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
-#         [False, True, False, False],
-#         30,
-#         "JD",
-#         "1900-01-01",
-#         60,
-#         {'n_estimators': 20, 'learning_rate': 0.05, 'max_depth': 6, 'early_stopping_rounds': 1, 'eval_metric': 'rmse'},
-#         1,
-#         "mse",
-#         "adam",
-#         0.001,
-#         32,
-#         1,
-#         lambda: False,
-#         lambda name, epoch, total_epochs, loss, val_loss: print(f"{name} {epoch}/{total_epochs} loss={loss} val_loss={val_loss}"),
-#         [{'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'},
-#         {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'}]
-#     )
-# ###print(return_status)#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
-# ##############################################################################
+############ to test without gradio ##############
+if __name__ == "__main__":
+    fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
+        [False, True, False, False],
+        30,
+        "JD",
+        "1900-01-01",
+        60,
+        {'n_estimators': 20, 'learning_rate': 0.05, 'max_depth': 6, 'early_stopping_rounds': 1, 'eval_metric': 'rmse'},
+        1,
+        "mse",
+        "adam",
+        0.001,
+        32,
+        1,
+        lambda: False,
+        lambda name, epoch, total_epochs, loss, val_loss: print(f"{name} {epoch}/{total_epochs} loss={loss} val_loss={val_loss}"),
+        [{'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'},
+        {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'}]
+    )
+print(return_status)#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
+##############################################################################

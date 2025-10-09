@@ -4,6 +4,8 @@ import pandas as pd
 from sklearn.preprocessing import RobustScaler
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+# it may be confusing but sometimes train_loss is higher that test_loss this is because
+# old data is more volatile and harder to learn than new data 
 
 def predict_stock_prices(
 df_org,
@@ -15,6 +17,8 @@ stop_check,
 progress_callback):
 
     Status="OK"
+    train_loss = 0
+    test_loss = 0
     X_train, y_train, X_test, y_test, future_X = get_split_data(df_org, days_to_train, days_in_future)
     X_scaler = RobustScaler()
     y_scaler = RobustScaler()
@@ -33,37 +37,56 @@ progress_callback):
 
 
     #train and predict 
-    models = {}
+    #models = {}
+    train_preds = []
     test_preds = []
     future_preds = []
-    current_val_loss=0
-    loss=0
+    test_loss=0
+    train_loss=0
     for day in range(1, days_in_future + 1):
-        progress_callback("XGBRegressor", day, days_in_future,loss, current_val_loss)
+        progress_callback("XGBRegressor", day, days_in_future,train_loss, test_loss)
         if stop_check():
             Status =(f" User clicked Stop Training. Stopped at day {day}")
             return None, None, None, Status
         model = XGBRegressor(**model_params)
 
         model.fit(X_train, y_train[f'target_{day}'], eval_set=[(X_test, y_test[f'target_{day}'])], verbose=False)
-        pred = model.predict(X_test)
-        test_preds.append(pred[-1])
+        pred_test = model.predict(X_test)
+        test_preds.append(pred_test[-1])
         future_preds.append(model.predict(future_X))
-        models[f'model_day_{day}'] = model
-        train_pred = model.predict(X_train[-1].reshape(1,-1))
-        train_true_values= np.array([y_train[f'target_{day}'][-1]])
-        loss = get_score(train_pred, train_true_values, loss_function)
-        current_val_loss=0
+        #models[f'model_day_{day}'] = model
+        
+        pred_train = model.predict(X_train)
+        train_preds.append(pred_train[-1])
+        
+        test_loss=0
         for i_test in range(0,X_test.shape[0]):
-            current_val_loss = current_val_loss + get_score(pred[i_test].reshape(1, -1), y_test[f'target_{day}'][i_test].reshape(1, -1), loss_function)
-        current_val_loss = current_val_loss / X_test.shape[0]
+            test_loss = test_loss + get_score(inverse_scaller(pred_test[i_test].reshape(1, -1), y_scaler), inverse_scaller(y_test[f'target_{day}'][i_test].reshape(1, -1), y_scaler), loss_function)
+        test_loss = test_loss + test_loss
+        test_loss = test_loss / X_test.shape[0]
+        train_loss = 0
+        for i_train in range(0,X_train.shape[0]):
+            train_loss = train_loss + get_score(inverse_scaller(pred_train[i_train].reshape(1, -1), y_scaler), inverse_scaller(y_train[f'target_{day}'][i_train].reshape(1, -1), y_scaler), loss_function)
+        train_loss = train_loss + train_loss
+        train_loss = train_loss / X_train.shape[0]
+   
+    train_loss = train_loss / (X_train.shape[0]*days_in_future)
+    test_loss = test_loss / (X_test.shape[0]*days_in_future)
+    
     test_preds = np.array(test_preds).reshape(-1,1)
-    real_vals=np.array([y_test[f"target_{day}"][-1] for day in range(1,days_in_future+1)]).reshape(1,-1).flatten()
+    real_vals_test=np.array([y_test[f"target_{day}"][-1] for day in range(1,days_in_future+1)]).reshape(1,-1).flatten()
     test_preds=inverse_scaller(test_preds, y_scaler)
-    real_vals=inverse_scaller(real_vals, y_scaler)
-    score = get_score(test_preds,real_vals, loss_function)
+    real_vals_test=inverse_scaller(real_vals_test, y_scaler)
+    last_record_test_score = get_score(test_preds,real_vals_test, loss_function) #this will be displayed on the chart in legend
+    
+    train_preds = np.array(train_preds).reshape(-1,1)
+    real_vals_train=np.array([y_train[f"target_{day}"][-1] for day in range(1,days_in_future+1)]).reshape(1,-1).flatten()
+    train_preds=inverse_scaller(train_preds, y_scaler)
+    real_vals_train=inverse_scaller(real_vals_train, y_scaler)
+    last_record_train_score = get_score(train_preds,real_vals_train, loss_function) #this will be displayed on the chart in legend
 
-    return test_preds, inverse_scaller(np.array(future_preds), y_scaler), score,Status
+    #print(train_loss, test_loss)
+    return test_preds, inverse_scaller(np.array(future_preds), y_scaler), last_record_test_score,Status, train_loss, test_loss, last_record_train_score
 
 
 def get_score(predicted, real, loss_function):
