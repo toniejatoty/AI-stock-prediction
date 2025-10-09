@@ -155,15 +155,15 @@ def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
 
 
 
-############## to test without gradio ##############
+# ############ to test without gradio ##############
 # if __name__ == "__main__":
 #     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
 #         [False, True, False, False],
 #         30,
-#         "AAPL",
+#         "JD",
 #         "1900-01-01",
 #         60,
-#         {'n_estimators': 1, 'learning_rate': 0.05, 'max_depth': 6, 'early_stopping_rounds': 1, 'eval_metric': 'rmse'},
+#         {'n_estimators': 20, 'learning_rate': 0.05, 'max_depth': 6, 'early_stopping_rounds': 1, 'eval_metric': 'rmse'},
 #         1,
 #         "mse",
 #         "adam",
@@ -175,5 +175,5 @@ def validate_params(days_to_train,df_stockdata,days_in_future_to_predict):
 #         [{'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'},
 #         {'units': 50, 'dropout': 0.2, 'recurrent_dropout': 0, 'activation': 'tanh', 'recurrent_activation': 'sigmoid'}]
 #     )
-# print(return_status)#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
+# ###print(return_status)#     fig_all, fig_linear, fig_xgb, fig_lstm, fig_lstm2, return_status = get_predictions(
 # ##############################################################################

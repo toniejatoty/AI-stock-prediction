@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -16,11 +16,12 @@ progress_callback):
 
     Status="OK"
     X_train, y_train, X_test, y_test, future_X = get_split_data(df_org, days_to_train, days_in_future)
-    X_scaler = MinMaxScaler(feature_range=(0, 1))
-    y_scaler = MinMaxScaler(feature_range=(0, 1))
+    X_scaler = RobustScaler()
+    y_scaler = RobustScaler()
 
     X_train = X_scaler.fit_transform(X_train)
     X_test = X_scaler.transform(X_test)
+    future_X = X_scaler.transform(future_X)
     y_train_all_values = set()
     for i in range(1, days_in_future + 1):
         for j in range(0, y_train[f'target_{i}'].shape[0]):
@@ -37,7 +38,6 @@ progress_callback):
     future_preds = []
     current_val_loss=0
     loss=0
-    
     for day in range(1, days_in_future + 1):
         progress_callback("XGBRegressor", day, days_in_future,loss, current_val_loss)
         if stop_check():
@@ -50,20 +50,20 @@ progress_callback):
         test_preds.append(pred[-1])
         future_preds.append(model.predict(future_X))
         models[f'model_day_{day}'] = model
-
         train_pred = model.predict(X_train[-1].reshape(1,-1))
         train_true_values= np.array([y_train[f'target_{day}'][-1]])
         loss = get_score(train_pred, train_true_values, loss_function)
         current_val_loss=0
-        for day2 in range(0,X_test.shape[0]):
-            current_val_loss = current_val_loss + get_score(pred[day2].reshape(1, -1), y_test[f'target_{day}'][day2].reshape(1, -1), loss_function)
+        for i_test in range(0,X_test.shape[0]):
+            current_val_loss = current_val_loss + get_score(pred[i_test].reshape(1, -1), y_test[f'target_{day}'][i_test].reshape(1, -1), loss_function)
         current_val_loss = current_val_loss / X_test.shape[0]
     test_preds = np.array(test_preds).reshape(-1,1)
     real_vals=np.array([y_test[f"target_{day}"][-1] for day in range(1,days_in_future+1)]).reshape(1,-1).flatten()
-    test_preds=inverse_scaller(test_preds, df_org, y_scaler)
-    real_vals=inverse_scaller(real_vals, df_org, y_scaler)
+    test_preds=inverse_scaller(test_preds, y_scaler)
+    real_vals=inverse_scaller(real_vals, y_scaler)
     score = get_score(test_preds,real_vals, loss_function)
-    return test_preds, inverse_scaller(np.array(future_preds), df_org, y_scaler), score,Status
+
+    return test_preds, inverse_scaller(np.array(future_preds), y_scaler), score,Status
 
 
 def get_score(predicted, real, loss_function):
@@ -102,23 +102,7 @@ def get_split_data(df_org, days_to_train, days_in_future, proc=0.8):
     
     future_X = df_org[required_cols].values[-days_to_train:].flatten().reshape(1, -1)
 
-
-    # print("XGBR")
-    # print(f"X={X}")
-    # print(f"len(X)={len(X)}")
-    # print(f"day_train={days_to_train}")
-    # print(f"future_days={days_in_future}")
-    # print(f"df.shape[0]={df.shape[0]}")
-    # print(f"index={index_train}")
-    # print(f"X_train={X_train}")
-    # print(f"X_test={X_test}")
-    # print(f"y_train={y_train}")
-    # print(f"y_test={y_test}")
     return X_train, y_train, X_test, y_test, future_X
 
-def inverse_scaller(predictions, df, scaler):
-    temp_array = np.zeros((predictions.shape[0], df.shape[1]))
-    temp_array[:, df.columns.get_loc("Close")] = predictions.flatten()
-    predictions_original = scaler.inverse_transform(temp_array)
-    predictions_close = predictions_original[:, df.columns.get_loc("Close")]
-    return predictions_close
+def inverse_scaller(predictions, scaler):
+    return scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
