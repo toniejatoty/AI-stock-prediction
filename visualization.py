@@ -10,8 +10,11 @@ def get_plot(
     days_to_train,
     predictions,
     days_in_future_to_predict,
-    score_of_training,
-    title
+    last_record_test_score,
+    title,
+    train_loss=0,
+    test_loss=0,
+    last_record_train_score=0
 ):
     if np.any(result_of_testing == None) :
         return None
@@ -38,8 +41,16 @@ def get_plot(
     ax.set_title(f"{title} ({df.index[0].date()} - {future_dates[-1].date()})")
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
     ax.legend(
-        title=f"Number of days to train: {days_to_train}\nNumber of days to predict: {days_in_future_to_predict}\nScore:{score_of_training:.4f}"
+        title=f"Number of days to train: {days_to_train}\nNumber of days to predict: {days_in_future_to_predict}\nScore:{last_record_test_score:.4f}"
     )
+    ax.text(
+    0.02, 0.98,
+    f"Train loss: {train_loss:.4f}\nTest loss: {test_loss:.4f}\nTrain score: {last_record_train_score:.4f}\nTest score: {last_record_test_score:.4f}",
+    transform=ax.transAxes,
+    fontsize=10,
+    verticalalignment='top',
+    bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+)
     plt.tight_layout()
     return fig
 
